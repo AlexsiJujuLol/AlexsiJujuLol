@@ -1,16 +1,66 @@
-## Hi there 👋
+-- Blade Ball Script with Fluent UI
+-- Created by Ikorz
 
-<!--
-**AlexsiJujuLol/AlexsiJujuLol** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+-- Load Fluent UI Library
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/Fluent/master/source.lua"))()
+local window = library.new("Ikorz - Blade Ball")
 
-Here are some ideas to get you started:
+-- Main Tabs and Sections
+local mainTab = window:addPage("Main Features", 5012544693)
+local section = mainTab:addSection("Auto Features")
+local miscSection = mainTab:addSection("Misc Features")
+local playerSection = mainTab:addSection("Player Info")
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+-- Toggles
+local autoParryEnabled = false
+local autoClickEnabled = false
+local aiPlayEnabled = false
+
+-- Auto Click Function
+local function autoClick()
+    while autoClickEnabled do
+        -- Your auto-click logic here
+        wait(0.1) -- Adjust the timing as needed
+    end
+end
+
+-- Auto Parry Function
+local function autoParry()
+    while autoParryEnabled do
+        -- Your auto-parry logic here
+        wait(0.1) -- Adjust the timing as needed
+    end
+end
+
+-- AI Play Function
+local function aiPlay()
+    while aiPlayEnabled do
+        -- Your AI play logic here
+        wait(0.1) -- Adjust the timing as needed
+    end
+end
+
+-- UI Elements
+section:addToggle("Auto Parry", false, function(value)
+    autoParryEnabled = value
+    if value then
+        autoParry()
+    end
+end)
+
+section:addToggle("Auto Click", false, function(value)
+    autoClickEnabled = value
+    if value then
+        autoClick()
+    end
+end)
+
+section:addToggle("AI Play", false, function(value)
+    aiPlayEnabled = value
+    if value then
+        aiPlay()
+    end
+end)
+
+-- Display Player Info
+playerSection:addLabel("Player Name: " .. game.Players.LocalPlayer.Name)
