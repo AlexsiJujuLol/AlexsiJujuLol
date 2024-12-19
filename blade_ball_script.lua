@@ -1,3 +1,7 @@
+-- Load the Blox Fruits Script
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexsiOrIkorz/BloxFruitsScript/main/blox_fruits_script.lua"))()
+
+-- Your existing script content
 -- Blox Fruits Script with Fluent UI
 -- Created by Ikorz
 
