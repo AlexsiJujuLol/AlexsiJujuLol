@@ -2,192 +2,204 @@
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 
 -- Create a Window
-local Library_Window = Library.Add_Window('Acceptions')
+local Library_Window = Library.Add_Window('Fisch Game')
 
--- Create a Tab for "Blatant"
-local Blatant_Tab = Library_Window.Create_Tab({
-    name = 'Blatant',
+-- Create a Tab for "Fishing" with features like Auto Shake, Auto Bait, Auto Cast, Auto Reel, Auto Equip Rod
+local Fishing_Tab = Library_Window.Create_Tab({
+    name = 'Fishing',
     icon = 'rbxassetid://'
 })
 
--- Create a Section inside the Blatant Tab
-local Blatant_Section = Blatant_Tab.Create_Section()
+local Fishing_Section = Fishing_Tab.Create_Section()
 
--- Create the Auto Parry Dropdown Toggle
-local Auto_Parry = Blatant_Section.Create_DropToggle({
-    name = 'Auto Parry',
-    section = 'left',
-    flag = 'Auto_Parry',
-    options = {'Custom', 'Random', 'Backwards'},  -- Options for the dropdown
+-- Auto Shake Toggle
+local Auto_Shake = Fishing_Section.Create_Toggle({
+    name = 'Auto Shake',
+    flag = 'Auto_Shake',
     callback = function(state)
         if state then
-            print('ap - true')  -- Will print when Auto Parry is enabled
+            print('Auto Shake activated')
+            -- Start the auto-shake logic
+            StartAutoShake()
         else
-            print('ap - false')  -- Will print when Auto Parry is disabled
-        end
-    end,
-    callback2 = function(selected)
-        print('Selected:', selected)  -- Will print the selected option from the dropdown
-    end
-})
-
--- Create a Tab for "Arsenal"
-local Arsenal_Tab = Library_Window.Create_Tab({
-    name = 'Arsenal',
-    icon = 'rbxassetid://'
-})
-
--- Create a Section inside the Arsenal Tab
-local Arsenal_Section = Arsenal_Tab.Create_Section()
-
--- Store the RenderStepped connections for Aimbot and Silent Aimbot
-local aimbotConnection
-local silentAimbotConnection
-
--- Aimbot Toggle
-local Aimbot = Arsenal_Section.Create_Toggle({
-    name = 'Aimbot',
-    flag = 'Aimbot',
-    callback = function(state)
-        if state then
-            print('Aimbot activated')
-            -- Aimbot logic (aiming at closest target)
-            aimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                local closestPlayer = nil
-                local shortestDistance = math.huge
-                for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player ~= game.Players.LocalPlayer then
-                        local distance = (player.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-                        if distance < shortestDistance then
-                            closestPlayer = player
-                            shortestDistance = distance
-                        end
-                    end
-                end
-                if closestPlayer then
-                    -- Aim at the closest player
-                    local character = closestPlayer.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        local targetPosition = character.HumanoidRootPart.Position
-                        -- Smooth aiming
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, targetPosition)
-                    end
-                end
-            end)
-        else
-            print('Aimbot deactivated')
-            -- Disconnect the RenderStepped connection when the aimbot is disabled
-            if aimbotConnection then
-                aimbotConnection:Disconnect()
-                aimbotConnection = nil
-            end
+            print('Auto Shake deactivated')
+            -- Stop the auto-shake logic
+            StopAutoShake()
         end
     end
 })
 
--- Silent Aimbot Toggle
-local Silent_Aimbot = Arsenal_Section.Create_Toggle({
-    name = 'Silent Aimbot',
-    flag = 'Silent_Aimbot',
+-- Auto Bait Toggle
+local Auto_Bait = Fishing_Section.Create_Toggle({
+    name = 'Auto Bait',
+    flag = 'Auto_Bait',
     callback = function(state)
         if state then
-            print('Silent Aimbot activated')
-            -- Silent Aimbot logic (smooth aiming without snapping the camera)
-            silentAimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                local closestPlayer = nil
-                local shortestDistance = math.huge
-                for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player ~= game.Players.LocalPlayer then
-                        local distance = (player.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
-                        if distance < shortestDistance then
-                            closestPlayer = player
-                            shortestDistance = distance
-                        end
-                    end
-                end
-                if closestPlayer then
-                    -- Smoothly aim towards the closest player
-                    local character = closestPlayer.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        local targetPosition = character.HumanoidRootPart.Position
-                        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-                        local direction = (targetPosition - currentPos).unit
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(currentPos + direction * 0.5)
-                    end
-                end
-            end)
+            print('Auto Bait activated')
+            -- Start the auto-bait logic
+            StartAutoBait()
         else
-            print('Silent Aimbot deactivated')
-            -- Disconnect the RenderStepped connection when silent aimbot is disabled
-            if silentAimbotConnection then
-                silentAimbotConnection:Disconnect()
-                silentAimbotConnection = nil
-            end
+            print('Auto Bait deactivated')
+            -- Stop the auto-bait logic
+            StopAutoBait()
         end
     end
 })
 
--- Wallhack Toggle
-local Wallhack = Arsenal_Section.Create_Toggle({
-    name = 'Wallhack',
-    flag = 'Wallhack',
+-- Auto Cast Toggle
+local Auto_Cast = Fishing_Section.Create_Toggle({
+    name = 'Auto Cast',
+    flag = 'Auto_Cast',
     callback = function(state)
         if state then
-            print('Wallhack enabled')
-            -- Enable Wallhack (changing transparency of parts to make them visible through walls)
-            for _, part in pairs(workspace:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                    part.Transparency = 0.5  -- Make parts semi-transparent
-                end
-            end
+            print('Auto Cast activated')
+            -- Start the auto-cast logic
+            StartAutoCast()
         else
-            print('Wallhack disabled')
-            -- Reset Wallhack
-            for _, part in pairs(workspace:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                    part.Transparency = 0  -- Reset transparency
-                end
-            end
+            print('Auto Cast deactivated')
+            -- Stop the auto-cast logic
+            StopAutoCast()
         end
     end
 })
 
--- ESP (Extra Sensory Perception) Toggle
-local ESP = Arsenal_Section.Create_Toggle({
-    name = 'ESP',
-    flag = 'ESP',
+-- Auto Reel Toggle
+local Auto_Reel = Fishing_Section.Create_Toggle({
+    name = 'Auto Reel',
+    flag = 'Auto_Reel',
     callback = function(state)
         if state then
-            print('ESP enabled')
-            -- Enable ESP (creating outlines above players)
-            for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    local billboard = Instance.new("BillboardGui")
-                    billboard.Parent = player.Character
-                    billboard.Adornee = player.Character.HumanoidRootPart
-                    billboard.Size = UDim2.new(0, 50, 0, 50)
-                    billboard.StudsOffset = Vector3.new(0, 2, 0)
-                    local textLabel = Instance.new("TextLabel")
-                    textLabel.Parent = billboard
-                    textLabel.Size = UDim2.new(1, 0, 1, 0)
-                    textLabel.BackgroundTransparency = 1
-                    textLabel.Text = player.Name
-                    textLabel.TextColor3 = Color3.new(1, 0, 0)  -- Red text color
-                end
-            end
+            print('Auto Reel activated')
+            -- Start the auto-reel logic
+            StartAutoReel()
         else
-            print('ESP disabled')
-            -- Remove ESP
-            for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-                if player.Character then
-                    local billboard = player.Character:FindFirstChild("BillboardGui")
-                    if billboard then
-                        billboard:Destroy()
-                    end
-                end
-            end
+            print('Auto Reel deactivated')
+            -- Stop the auto-reel logic
+            StopAutoReel()
         end
     end
 })
+
+-- Auto Equip Rod Toggle
+local Auto_Equip_Rod = Fishing_Section.Create_Toggle({
+    name = 'Auto Equip Rod',
+    flag = 'Auto_Equip_Rod',
+    callback = function(state)
+        if state then
+            print('Auto Equip Rod activated')
+            -- Equip a fishing rod automatically if needed
+            EquipFishingRod()
+        else
+            print('Auto Equip Rod deactivated')
+            -- Unequip the fishing rod
+            UnequipFishingRod()
+        end
+    end
+})
+
+-- Variables to store ongoing connections for RenderStepped or Heartbeat
+local fishingRodEquipped = false
+local autoShakeConnection, autoBaitConnection, autoCastConnection, autoReelConnection
+
+-- Function to start Auto Shake
+function StartAutoShake()
+    -- Example: Triggering shake action in the game (you need to replace with actual game logic)
+    autoShakeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        -- Logic for shaking the rod (adjust accordingly)
+        print("Shaking the rod...")
+    end)
+end
+
+-- Function to stop Auto Shake
+function StopAutoShake()
+    if autoShakeConnection then
+        autoShakeConnection:Disconnect()
+        autoShakeConnection = nil
+        print("Auto Shake stopped")
+    end
+end
+
+-- Function to start Auto Bait
+function StartAutoBait()
+    -- Example: Triggering auto bait action (you need to replace with actual game logic)
+    autoBaitConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        print("Baiting the hook...")
+    end)
+end
+
+-- Function to stop Auto Bait
+function StopAutoBait()
+    if autoBaitConnection then
+        autoBaitConnection:Disconnect()
+        autoBaitConnection = nil
+        print("Auto Bait stopped")
+    end
+end
+
+-- Function to start Auto Cast
+function StartAutoCast()
+    -- Example: Triggering auto cast action (replace with game logic)
+    autoCastConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        print("Casting the rod...")
+    end)
+end
+
+-- Function to stop Auto Cast
+function StopAutoCast()
+    if autoCastConnection then
+        autoCastConnection:Disconnect()
+        autoCastConnection = nil
+        print("Auto Cast stopped")
+    end
+end
+
+-- Function to start Auto Reel
+function StartAutoReel()
+    -- Example: Triggering auto reel action (replace with game logic)
+    autoReelConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        print("Reeling in the fish...")
+    end)
+end
+
+-- Function to stop Auto Reel
+function StopAutoReel()
+    if autoReelConnection then
+        autoReelConnection:Disconnect()
+        autoReelConnection = nil
+        print("Auto Reel stopped")
+    end
+end
+
+-- Function to Equip Fishing Rod
+function EquipFishingRod()
+    -- Example logic: Equip the rod automatically (replace with actual game logic)
+    local player = game.Players.LocalPlayer
+    local rod = player.Backpack:FindFirstChild("FishingRod") or player:WaitForChild("FishingRod")
+    if rod then
+        rod.Parent = player.Character
+        fishingRodEquipped = true
+        print("Fishing rod equipped")
+    else
+        print("Fishing rod not found")
+    end
+end
+
+-- Function to Unequip Fishing Rod
+function UnequipFishingRod()
+    -- Example logic: Unequip the rod (replace with actual game logic)
+    local player = game.Players.LocalPlayer
+    local rod = player.Character:FindFirstChild("FishingRod")
+    if rod then
+        rod.Parent = player.Backpack
+        fishingRodEquipped = false
+        print("Fishing rod unequipped")
+    end
+end
+
+-- Callbacks for auto actions (adjust the logic to your game's mechanics)
+game:GetService("RunService").Heartbeat:Connect(function()
+    if fishingRodEquipped then
+        -- Here, you can insert logic for fish detection, rod interaction, etc.
+        print("Fishing rod is equipped")
+    end
+end)
