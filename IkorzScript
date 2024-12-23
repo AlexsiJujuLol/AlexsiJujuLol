@@ -154,8 +154,8 @@ end
 local Window = Library.CreateLib("Blade Ball Auto-Parry + Aimbot", "DarkTheme")
 
 -- Blade Ball Auto-Parry Tab
-local AutoParryTab = Window:NewTab("Blade Ball Auto-Parry")
-local AutoParrySection = AutoParryTab:NewSection("Auto-Parry Settings")
+local BladeBallTab = Window:NewTab("Blade Ball Auto-Parry")
+local AutoParrySection = BladeBallTab:NewSection("Auto-Parry Settings")
 
 -- Toggle for enabling auto parry
 AutoParrySection:NewToggle("Enable Auto-Parry", "Activate the auto parry functionality", function(state)
@@ -185,12 +185,12 @@ AutoParrySection:NewSlider("Spam Speed", "Set how fast the script checks for bal
     spam_speed = value  -- Adjust the speed at which the script checks for balls
 end)
 
--- Aimbot & ESP Tab
-local AimbotTab = Window:NewTab("Aimbot & ESP")
-local AimbotSection = AimbotTab:NewSection("Aimbot & ESP Settings")
+-- Arsenal Aimbot & ESP Tab
+local ArsenalTab = Window:NewTab("Arsenal Aimbot & ESP")
+local ArsenalSection = ArsenalTab:NewSection("Aimbot & ESP Settings")
 
 -- Toggle for enabling aimbot
-AimbotSection:NewToggle("Enable Aimbot", "Activate the aimbot to automatically aim at the closest target", function(state)
+ArsenalSection:NewToggle("Enable Aimbot", "Activate the aimbot to automatically aim at the closest target", function(state)
     aimbot_enabled = state
     if aimbot_enabled then
         task.spawn(aimbot)  -- Start the aimbot loop
@@ -198,12 +198,12 @@ AimbotSection:NewToggle("Enable Aimbot", "Activate the aimbot to automatically a
 end)
 
 -- Toggle for enabling silent aim
-AimbotSection:NewToggle("Enable Silent Aim", "Enable silent aim (makes the aimbot smooth)", function(state)
+ArsenalSection:NewToggle("Enable Silent Aim", "Enable silent aim (makes the aimbot smooth)", function(state)
     silent_aim_enabled = state
 end)
 
 -- Toggle for enabling ESP
-AimbotSection:NewToggle("Enable ESP", "Enable ESP to show enemy locations", function(state)
+ArsenalSection:NewToggle("Enable ESP", "Enable ESP to show enemy locations", function(state)
     esp_enabled = state
     if esp_enabled then
         task.spawn(esp)  -- Start the ESP loop
@@ -211,7 +211,7 @@ AimbotSection:NewToggle("Enable ESP", "Enable ESP to show enemy locations", func
 end)
 
 -- Toggle for enabling wallhack
-AimbotSection:NewToggle("Enable Wallhack", "Enable wallhack to see through walls", function(state)
+ArsenalSection:NewToggle("Enable Wallhack", "Enable wallhack to see through walls", function(state)
     wallhack_enabled = state
     if wallhack_enabled then
         task.spawn(wallhack)  -- Start the wallhack loop
