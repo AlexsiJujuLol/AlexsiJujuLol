@@ -1,205 +1,229 @@
--- Load the Library
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 
--- Create a Window
-local Library_Window = Library.Add_Window('Fisch Game')
+local Library_Window = Library.Add_Window('Acceptions')
 
--- Create a Tab for "Fishing" with features like Auto Shake, Auto Bait, Auto Cast, Auto Reel, Auto Equip Rod
-local Fishing_Tab = Library_Window.Create_Tab({
-    name = 'Fishing',
+-- Create a Tab for "Blatant"
+local Blatant_Tab = Library_Window.Create_Tab({
+    name = 'Blatant',
     icon = 'rbxassetid://'
 })
 
-local Fishing_Section = Fishing_Tab.Create_Section()
+local Blatant_Section = Blatant_Tab.Create_Section()
+local Auto_Parry = Blatant_Section.Create_DropToggle({
+    name = 'Auto Parry',
+    section = 'left',
+    flag = 'Auto_Parry',
+    options = {'Custom', 'Random', 'Backwards'},
+    callback = function(state)
+        if state then
+           print('Auto Parry enabled')
+        else
+           print('Auto Parry disabled')
+        end
+    end,
+    callback2 = function(selected)
+        print('Selected:', selected)
+    end
+})
+
+-- Create a Tab for "Fisch"
+local Fisch_Tab = Library_Window.Create_Tab({
+    name = 'Fisch',
+    icon = 'rbxassetid://'
+})
+
+local Fisch_Section = Fisch_Tab.Create_Section()
+
+-- Define delays for each action
+local shakeDelay = 2
+local castDelay = 5
+local baitDelay = 10
+local reelDelay = 3
+local equipRodDelay = 1
+
+-- Helper function for delayed actions
+local function delayAction(func, delayTime)
+    local lastAction = 0
+    return function()
+        local currentTime = tick()
+        if currentTime - lastAction >= delayTime then
+            func()
+            lastAction = currentTime
+        end
+    end
+end
 
 -- Auto Shake Toggle
-local Auto_Shake = Fishing_Section.Create_Toggle({
+local Auto_Shake = Fisch_Section.Create_Toggle({
     name = 'Auto Shake',
     flag = 'Auto_Shake',
     callback = function(state)
         if state then
             print('Auto Shake activated')
-            -- Start the auto-shake logic
             StartAutoShake()
         else
             print('Auto Shake deactivated')
-            -- Stop the auto-shake logic
             StopAutoShake()
         end
     end
 })
 
--- Auto Bait Toggle
-local Auto_Bait = Fishing_Section.Create_Toggle({
-    name = 'Auto Bait',
-    flag = 'Auto_Bait',
-    callback = function(state)
-        if state then
-            print('Auto Bait activated')
-            -- Start the auto-bait logic
-            StartAutoBait()
-        else
-            print('Auto Bait deactivated')
-            -- Stop the auto-bait logic
-            StopAutoBait()
-        end
-    end
-})
-
 -- Auto Cast Toggle
-local Auto_Cast = Fishing_Section.Create_Toggle({
+local Auto_Cast = Fisch_Section.Create_Toggle({
     name = 'Auto Cast',
     flag = 'Auto_Cast',
     callback = function(state)
         if state then
             print('Auto Cast activated')
-            -- Start the auto-cast logic
             StartAutoCast()
         else
             print('Auto Cast deactivated')
-            -- Stop the auto-cast logic
             StopAutoCast()
         end
     end
 })
 
+-- Auto Bait Toggle
+local Auto_Bait = Fisch_Section.Create_Toggle({
+    name = 'Auto Bait',
+    flag = 'Auto_Bait',
+    callback = function(state)
+        if state then
+            print('Auto Bait activated')
+            StartAutoBait()
+        else
+            print('Auto Bait deactivated')
+            StopAutoBait()
+        end
+    end
+})
+
 -- Auto Reel Toggle
-local Auto_Reel = Fishing_Section.Create_Toggle({
+local Auto_Reel = Fisch_Section.Create_Toggle({
     name = 'Auto Reel',
     flag = 'Auto_Reel',
     callback = function(state)
         if state then
             print('Auto Reel activated')
-            -- Start the auto-reel logic
             StartAutoReel()
         else
             print('Auto Reel deactivated')
-            -- Stop the auto-reel logic
             StopAutoReel()
         end
     end
 })
 
 -- Auto Equip Rod Toggle
-local Auto_Equip_Rod = Fishing_Section.Create_Toggle({
+local Auto_Equip_Rod = Fisch_Section.Create_Toggle({
     name = 'Auto Equip Rod',
     flag = 'Auto_Equip_Rod',
     callback = function(state)
         if state then
             print('Auto Equip Rod activated')
-            -- Equip a fishing rod automatically if needed
-            EquipFishingRod()
+            StartAutoEquipRod()
         else
             print('Auto Equip Rod deactivated')
-            -- Unequip the fishing rod
-            UnequipFishingRod()
+            StopAutoEquipRod()
         end
     end
 })
 
--- Variables to store ongoing connections for RenderStepped or Heartbeat
-local fishingRodEquipped = false
-local autoShakeConnection, autoBaitConnection, autoCastConnection, autoReelConnection
-
--- Function to start Auto Shake
+-- Auto Shake
+local shaking = false
 function StartAutoShake()
-    -- Example: Triggering shake action in the game (you need to replace with actual game logic)
-    autoShakeConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        -- Logic for shaking the rod (adjust accordingly)
-        print("Shaking the rod...")
-    end)
+    if not shaking then
+        shaking = true
+        local shakeWithDelay = delayAction(function()
+            print("Shaking the rod...")
+            -- Put the actual shake logic here
+        end, shakeDelay)
+        while shaking do
+            shakeWithDelay()
+            wait(0.1)  -- Run the delay check in small intervals
+        end
+    end
 end
 
--- Function to stop Auto Shake
 function StopAutoShake()
-    if autoShakeConnection then
-        autoShakeConnection:Disconnect()
-        autoShakeConnection = nil
-        print("Auto Shake stopped")
-    end
+    shaking = false
+    print("Shaking stopped.")
 end
 
--- Function to start Auto Bait
-function StartAutoBait()
-    -- Example: Triggering auto bait action (you need to replace with actual game logic)
-    autoBaitConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        print("Baiting the hook...")
-    end)
-end
-
--- Function to stop Auto Bait
-function StopAutoBait()
-    if autoBaitConnection then
-        autoBaitConnection:Disconnect()
-        autoBaitConnection = nil
-        print("Auto Bait stopped")
-    end
-end
-
--- Function to start Auto Cast
+-- Auto Cast
+local casting = false
 function StartAutoCast()
-    -- Example: Triggering auto cast action (replace with game logic)
-    autoCastConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        print("Casting the rod...")
-    end)
+    if not casting then
+        casting = true
+        local castWithDelay = delayAction(function()
+            print("Casting the rod...")
+            -- Put the actual cast logic here
+        end, castDelay)
+        while casting do
+            castWithDelay()
+            wait(0.1)
+        end
+    end
 end
 
--- Function to stop Auto Cast
 function StopAutoCast()
-    if autoCastConnection then
-        autoCastConnection:Disconnect()
-        autoCastConnection = nil
-        print("Auto Cast stopped")
+    casting = false
+    print("Casting stopped.")
+end
+
+-- Auto Bait
+local baiting = false
+function StartAutoBait()
+    if not baiting then
+        baiting = true
+        local baitWithDelay = delayAction(function()
+            print("Selecting bait...")
+            -- Put the actual baiting logic here
+        end, baitDelay)
+        while baiting do
+            baitWithDelay()
+            wait(0.1)
+        end
     end
 end
 
--- Function to start Auto Reel
+function StopAutoBait()
+    baiting = false
+    print("Baiting stopped.")
+end
+
+-- Auto Reel
+local reeling = false
 function StartAutoReel()
-    -- Example: Triggering auto reel action (replace with game logic)
-    autoReelConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        print("Reeling in the fish...")
-    end)
+    if not reeling then
+        reeling = true
+        local reelWithDelay = delayAction(function()
+            print("Reeling in the fish...")
+            -- Put the actual reeling logic here
+        end, reelDelay)
+        while reeling do
+            reelWithDelay()
+            wait(0.1)
+        end
+    end
 end
 
--- Function to stop Auto Reel
 function StopAutoReel()
-    if autoReelConnection then
-        autoReelConnection:Disconnect()
-        autoReelConnection = nil
-        print("Auto Reel stopped")
+    reeling = false
+    print("Reeling stopped.")
+end
+
+-- Auto Equip Rod
+local rodEquipped = false
+function StartAutoEquipRod()
+    if not rodEquipped then
+        rodEquipped = true
+        print("Equipping the rod...")
+        -- Put the actual logic for equipping the rod here
+        wait(equipRodDelay)
     end
 end
 
--- Function to Equip Fishing Rod
-function EquipFishingRod()
-    -- Example logic: Equip the rod automatically (replace with actual game logic)
-    local player = game.Players.LocalPlayer
-    local rod = player.Backpack:FindFirstChild("FishingRod") or player:WaitForChild("FishingRod")
-    if rod then
-        rod.Parent = player.Character
-        fishingRodEquipped = true
-        print("Fishing rod equipped")
-    else
-        print("Fishing rod not found")
-    end
+function StopAutoEquipRod()
+    rodEquipped = false
+    print("Rod equip stopped.")
 end
-
--- Function to Unequip Fishing Rod
-function UnequipFishingRod()
-    -- Example logic: Unequip the rod (replace with actual game logic)
-    local player = game.Players.LocalPlayer
-    local rod = player.Character:FindFirstChild("FishingRod")
-    if rod then
-        rod.Parent = player.Backpack
-        fishingRodEquipped = false
-        print("Fishing rod unequipped")
-    end
-end
-
--- Callbacks for auto actions (adjust the logic to your game's mechanics)
-game:GetService("RunService").Heartbeat:Connect(function()
-    if fishingRodEquipped then
-        -- Here, you can insert logic for fish detection, rod interaction, etc.
-        print("Fishing rod is equipped")
-    end
-end)
