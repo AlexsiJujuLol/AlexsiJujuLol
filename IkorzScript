@@ -7,24 +7,24 @@ local rootPart = Character:WaitForChild("HumanoidRootPart")
 
 -- Configurations for auto parry
 local auto_parry_enabled = false
-local parry_distance = 10
-local parry_delay = 0.5
-local parry_duration = 1
+local parry_distance = 10  -- Default parry distance
+local parry_delay = 0.3  -- Default delay between parry checks
+local parry_duration = 0.8  -- Default duration for parry animation
 local cooldown = false
-local spam_speed = 0.1
+local spam_speed = 0.1  -- Default speed for parry spam
 
--- Function to detect enemies within range
-local function detectEnemies()
-    local enemies = {}
+-- Function to detect balls within range
+local function detectBalls()
+    local balls = {}
     for _, obj in pairs(workspace:GetChildren()) do
-        if obj:IsA("Model") and obj:FindFirstChild("HumanoidRootPart") then
-            local distance = (obj.HumanoidRootPart.Position - rootPart.Position).Magnitude
+        if obj:IsA("Part") and obj.Name == "Ball" then
+            local distance = (obj.Position - rootPart.Position).Magnitude
             if distance <= parry_distance then
-                table.insert(enemies, obj)
+                table.insert(balls, obj)
             end
         end
     end
-    return enemies
+    return balls
 end
 
 -- Function to perform parry
@@ -33,10 +33,16 @@ local function performParry()
     cooldown = true
     local humanoid = Character:FindFirstChildOfClass("Humanoid")
     if humanoid then
+        -- Create a new animation instance for the parry action
         local parryAnimation = Instance.new("Animation")
-        parryAnimation.AnimationId = "rbxassetid://1234567890" -- Replace with actual animation ID
+        -- Set this to your animation ID (replace with your actual animation ID)
+        parryAnimation.AnimationId = "rbxassetid://6377993410"  -- Example Block animation ID (replace as needed)
         local animTrack = humanoid:LoadAnimation(parryAnimation)
+        
+        -- Play the animation
         animTrack:Play()
+        
+        -- Wait for the animation duration before stopping it
         task.wait(parry_duration)
         animTrack:Stop()
     end
@@ -46,87 +52,59 @@ end
 -- Function to enable auto parry
 local function autoParry()
     while auto_parry_enabled do
-        local enemies = detectEnemies()
-        if #enemies > 0 then
-            performParry()
+        local balls = detectBalls()
+        if #balls > 0 then
+            performParry()  -- Perform parry when a ball is detected
         end
-        task.wait(parry_delay)
+        task.wait(parry_delay)  -- Wait before checking again
     end
 end
 
--- UI and interface with Rayfield UI Library
+-- UI and interface with Kavo UI Library
 local success, Library = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source"))() -- Replace with your library link
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 end)
 
 if not success then
-    warn("Error loading Rayfield UI Library: " .. tostring(Library))
+    warn("Error loading Kavo UI Library: " .. tostring(Library))
     return
 else
-    print("Rayfield UI Library loaded successfully")
+    print("Kavo UI Library loaded successfully")
 end
 
--- Create UI window and sections
-local Window = Library:CreateWindow({
-    Name = "Blade Ball Auto-Parry",
-    Theme = Library.Themes.Dark,
-    SaveConfig = true,
-    ConfigFolder = "BladeBallConfig"
-})
+-- Create UI
+local Window = Library.CreateLib("Blade Ball Auto-Parry", "DarkTheme")
+local MainTab = Window:NewTab("Main")
+local MainSection = MainTab:NewSection("Auto-Parry")
 
-local MainTab = Window:CreateTab("Main")
-local MainSection = MainTab:CreateSection("Auto-Parry")
-
--- Auto-Parry Toggle
-MainSection:CreateToggle({
-    Name = "Enable Auto-Parry",
-    Callback = function(state)
-        auto_parry_enabled = state
-        if auto_parry_enabled then
-            task.spawn(autoParry)
-        end
+-- Toggle for enabling auto parry
+MainSection:NewToggle("Enable Auto-Parry", "Toggle automatic parry functionality", function(state)
+    auto_parry_enabled = state
+    if auto_parry_enabled then
+        task.spawn(autoParry)  -- Start the auto parry loop
     end
-})
+end)
 
--- Parry Distance Slider
-MainSection:CreateSlider({
-    Name = "Parry Distance",
-    Range = {1, 20},
-    Increment = 1,
-    Suffix = " units",
-    CurrentValue = 10,
-    Callback = function(value)
-        parry_distance = value
-    end
-})
+-- Slider to adjust parry distance
+MainSection:NewSlider("Parry Distance", "Set the distance for parrying balls", 100, 1, function(value)
+    parry_distance = value  -- Adjust the distance for detecting balls
+end)
 
--- Parry Delay Slider
-MainSection:CreateSlider({
-    Name = "Parry Delay",
-    Range = {0.1, 2},
-    Increment = 0.1,
-    Suffix = " seconds",
-    CurrentValue = 0.5,
-    Callback = function(value)
-        parry_delay = value
-    end
-})
+-- Slider to adjust parry delay (to control spam speed)
+MainSection:NewSlider("Parry Spam Speed", "Set the delay between parry attempts (lower = faster)", 2, 0.1, function(value)
+    parry_delay = value  -- Adjust the delay between each parry check
+end)
 
--- Spam Speed Slider
-MainSection:CreateSlider({
-    Name = "Spam Speed",
-    Range = {0.1, 1},
-    Increment = 0.1,
-    Suffix = " seconds",
-    CurrentValue = 0.1,
-    Callback = function(value)
-        spam_speed = value
-    end
-})
+-- Slider to adjust parry duration (how long the parry animation lasts)
+MainSection:NewSlider("Parry Duration", "Set the duration of the parry animation", 2, 0.1, function(value)
+    parry_duration = value  -- Adjust the parry animation duration
+end)
 
--- Notification on Load
+-- Notification after loading the script
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Blade Ball Auto-Parry Loaded",
-    Text = "Customize your settings in the Rayfield UI!",
+    Text = "Customize your settings in the Kavo UI!",
     Duration = 5
 })
+
+print("Script executed successfully")
