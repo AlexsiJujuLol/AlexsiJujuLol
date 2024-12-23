@@ -31,6 +31,41 @@ local Auto_Parry = Ikorz_Section.Create_DropToggle({
     end
 })
 
+-- Create a Tab for "Death Ball"
+local Death_Ball_Tab = Library_Window.Create_Tab({
+    name = 'Death Ball',
+    icon = 'rbxassetid://'
+})
+
+-- Create a Section inside the Death Ball Tab
+local Death_Ball_Section = Death_Ball_Tab.Create_Section()
+
+-- Auto Parry Feature
+local Auto_Parry_DB = Death_Ball_Section.Create_Toggle({
+    name = 'Auto Parry',
+    flag = 'Auto_Parry_DB',
+    callback = function(state)
+        if state then
+            print('Death Ball Auto Parry activated')
+        else
+            print('Death Ball Auto Parry deactivated')
+        end
+    end
+})
+
+-- Visual Auto Parry Feature
+local Visual_Auto_Parry_DB = Death_Ball_Section.Create_Toggle({
+    name = 'Visual Auto Parry',
+    flag = 'Visual_Auto_Parry_DB',
+    callback = function(state)
+        if state then
+            print('Death Ball Visual Auto Parry activated')
+        else
+            print('Death Ball Visual Auto Parry deactivated')
+        end
+    end
+})
+
 -- Create a Tab for "Arsenal"
 local Arsenal_Tab = Library_Window.Create_Tab({
     name = 'Arsenal',
