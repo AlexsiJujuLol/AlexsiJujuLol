@@ -18,7 +18,7 @@ local Auto_Parry = Ikorz_Section.Create_DropToggle({
     name = 'Auto Parry',
     section = 'left',
     flag = 'Auto_Parry',
-    options = {'Custom', 'Random', 'Backwards'}, 
+    options = {'Custom', 'Random', 'Backwards'},
     callback = function(state)
         if state then
             print('Auto Parry: Enabled')
@@ -31,7 +31,7 @@ local Auto_Parry = Ikorz_Section.Create_DropToggle({
     end
 })
 
--- Arsenal Tab with Aimbot and Other Features
+-- Arsenal Tab with Aimbot and Silent Aimbot
 local Arsenal_Tab = Library_Window.Create_Tab({
     name = 'Arsenal',
     icon = 'rbxassetid://'
@@ -39,21 +39,46 @@ local Arsenal_Tab = Library_Window.Create_Tab({
 
 local Arsenal_Section = Arsenal_Tab.Create_Section()
 
--- Aimbot
+-- Aimbot Toggle (for targeting closest player)
 local Aimbot = Arsenal_Section.Create_Toggle({
     name = 'Aimbot',
     flag = 'Aimbot',
     callback = function(state)
         if state then
             print('Aimbot: Activated')
-            -- Implement your aimbot logic here
+            -- Implement aimbot logic here
+            local player = game.Players.LocalPlayer
+            local mouse = player:GetMouse()
+            local closestPlayer = nil
+            local closestDistance = math.huge
+
+            -- Loop through all players to find the closest target
+            for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                if targetPlayer.Character and targetPlayer ~= player then
+                    local target = targetPlayer.Character:FindFirstChild('HumanoidRootPart')
+                    if target then
+                        local distance = (target.Position - mouse.Hit.p).Magnitude
+                        if distance < closestDistance then
+                            closestDistance = distance
+                            closestPlayer = target
+                        end
+                    end
+                end
+            end
+
+            -- Aim at closest player
+            if closestPlayer then
+                local targetPosition = closestPlayer.Position
+                -- Simulate an aim at the target position
+                -- Adjust camera or view here for mobile aiming
+            end
         else
             print('Aimbot: Deactivated')
         end
     end
 })
 
--- Silent Aimbot
+-- Silent Aimbot (smoother aim with no visual snapping)
 local Silent_Aimbot = Arsenal_Section.Create_Toggle({
     name = 'Silent Aimbot',
     flag = 'Silent_Aimbot',
@@ -61,6 +86,31 @@ local Silent_Aimbot = Arsenal_Section.Create_Toggle({
         if state then
             print('Silent Aimbot: Activated')
             -- Implement silent aimbot logic here
+            local player = game.Players.LocalPlayer
+            local mouse = player:GetMouse()
+            local closestPlayer = nil
+            local closestDistance = math.huge
+
+            -- Loop through all players to find the closest target
+            for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                if targetPlayer.Character and targetPlayer ~= player then
+                    local target = targetPlayer.Character:FindFirstChild('HumanoidRootPart')
+                    if target then
+                        local distance = (target.Position - mouse.Hit.p).Magnitude
+                        if distance < closestDistance then
+                            closestDistance = distance
+                            closestPlayer = target
+                        end
+                    end
+                end
+            end
+
+            -- Aim silently at closest player (without visible snapping)
+            if closestPlayer then
+                local targetPosition = closestPlayer.Position
+                -- Smoothly aim at targetPosition without visual snapping
+                -- Mobile will have its own input system, so you'd simulate a smooth transition of aim position
+            end
         else
             print('Silent Aimbot: Deactivated')
         end
@@ -73,10 +123,10 @@ local Triggerbot = Arsenal_Section.Create_Toggle({
     flag = 'Triggerbot',
     callback = function(state)
         if state then
-            print('Triggerbot: Activated')
+            print('Triggerbot activated')
             -- Implement triggerbot logic here
         else
-            print('Triggerbot: Deactivated')
+            print('Triggerbot deactivated')
         end
     end
 })
@@ -87,146 +137,38 @@ local Wallhack = Arsenal_Section.Create_Toggle({
     flag = 'Wallhack',
     callback = function(state)
         if state then
-            print('Wallhack: Enabled')
+            print('Wallhack enabled')
             -- Implement wallhack logic here
         else
-            print('Wallhack: Disabled')
+            print('Wallhack disabled')
         end
     end
 })
 
--- ESP
+-- ESP (Extra Sensory Perception)
 local ESP = Arsenal_Section.Create_Toggle({
     name = 'ESP',
     flag = 'ESP',
     callback = function(state)
         if state then
-            print('ESP: Enabled')
+            print('ESP enabled')
             -- Implement ESP logic here
         else
-            print('ESP: Disabled')
+            print('ESP disabled')
         end
     end
 })
 
--- Fish Tab (auto play features like Shake, Reel, Cast)
-local Fish_Tab = Library_Window.Create_Tab({
-    name = 'Fish',
-    icon = 'rbxassetid://'
-})
+-- Helper function to simulate smooth aiming for mobile
+local function SmoothAim(targetPosition)
+    local player = game.Players.LocalPlayer
+    local mouse = player:GetMouse()
+    
+    -- You can adjust the speed of aim transition here
+    local speed = 10
+    local direction = (targetPosition - mouse.Hit.p).unit
+    local newPosition = mouse.Hit.p + direction * speed
 
-local Fish_Section = Fish_Tab.Create_Section()
-
--- Auto-Shake Toggle
-local Auto_Shake = Fish_Section.Create_Toggle({
-    name = 'Auto Shake',
-    flag = 'Auto_Shake',
-    callback = function(state)
-        if state then
-            print('Auto Shake: Enabled')
-            -- Implement auto shake logic
-        else
-            print('Auto Shake: Disabled')
-        end
-    end
-})
-
--- Auto-Reel Toggle
-local Auto_Reel = Fish_Section.Create_Toggle({
-    name = 'Auto Reel',
-    flag = 'Auto_Reel',
-    callback = function(state)
-        if state then
-            print('Auto Reel: Enabled')
-            -- Implement auto reel logic
-        else
-            print('Auto Reel: Disabled')
-        end
-    end
-})
-
--- Auto-Cast Toggle
-local Auto_Cast = Fish_Section.Create_Toggle({
-    name = 'Auto Cast',
-    flag = 'Auto_Cast',
-    callback = function(state)
-        if state then
-            print('Auto Cast: Enabled')
-            -- Implement auto cast logic
-        else
-            print('Auto Cast: Disabled')
-        end
-    end
-})
-
--- Blade Ball (Death Ball Detection and Auto Parry)
-local Blade_Ball_Tab = Library_Window.Create_Tab({
-    name = 'Blade Ball',
-    icon = 'rbxassetid://'
-})
-
-local Blade_Ball_Section = Blade_Ball_Tab.Create_Section()
-
--- Auto Parry Toggle for Blade Ball
-local Auto_Parry_BladeBall = Blade_Ball_Section.Create_Toggle({
-    name = 'Auto Parry',
-    flag = 'Auto_Parry_BladeBall',
-    callback = function(state)
-        if state then
-            print('Auto Parry for Blade Ball: Enabled')
-            -- Implement auto parry logic for Blade Ball
-        else
-            print('Auto Parry for Blade Ball: Disabled')
-        end
-    end
-})
-
--- Visualize Death Ball
-local function Visualize_DeathBall(ball)
-    -- Logic to visualize Death Ball
-    local marker = Instance.new("Part")
-    marker.Shape = Enum.PartType.Ball
-    marker.Size = Vector3.new(2, 2, 2)
-    marker.Color = Color3.fromRGB(255, 0, 0)  -- Red color for Death Ball
-    marker.Position = ball.Position
-    marker.Anchored = true
-    marker.CanCollide = false
-    marker.Parent = workspace
-    game:GetService("Debris"):AddItem(marker, 5) -- Auto-remove after 5 seconds
+    -- Move camera smoothly towards the new position
+    -- Here you would apply a tween or a gradual camera transition
 end
-
--- Handle Death Ball and Death Detection Logic
-local function Handle_DeathBall(ball)
-    -- Logic to handle Death Ball behavior and humanoid death (e.g., player hit by Death Ball)
-    if ball:GetAttribute("deathBall") == true then
-        Visualize_DeathBall(ball)
-        print("Death Ball detected!")
-        -- Handle death or damage to the player here (example: reducing health)
-    end
-end
-
--- Watch for Death Ball Ball Spawn
-game.Workspace.Balls.ChildAdded:Connect(function(ball)
-    if ball:GetAttribute("deathBall") then
-        Handle_DeathBall(ball)
-    end
-end)
-
--- Auto Parry Mechanism
-local function AutoParryMechanism()
-    while true do
-        if Auto_Parry_BladeBall then
-            -- Implement the logic to parry balls based on distance and speed
-            -- Look for balls within range
-            print("Checking for balls to parry...")
-        end
-        wait(1)  -- Adjust the frequency of checking
-    end
-end
-
--- Call Auto Parry when enabled
-Auto_Parry_BladeBall.OnChange(function(state)
-    if state then
-        task.spawn(AutoParryMechanism)
-    end
-end)
