@@ -1,12 +1,65 @@
--- Services
+local Debug = false -- Set this to true if you want my debug output.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local rootPart = Character:WaitForChild("HumanoidRootPart")
 
--- Configurations for Auto Parry
+local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 9e9) -- A second argument in waitforchild what could it mean?
+local Balls = workspace:WaitForChild("Balls", 9e9)
+
+-- Functions
+
+local function print(...) -- Debug print.
+    if Debug then
+        warn(...)
+    end
+end
+
+local function VerifyBall(Ball) -- Returns nil if the ball isn't a valid projectile; true if it's the right ball.
+    if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
+        return true
+    end
+end
+
+local function IsTarget() -- Returns true if we are the current target.
+    return (Player.Character and Player.Character:FindFirstChild("Highlight"))
+end
+
+local function Parry() -- Parries.
+    Remotes:WaitForChild("ParryButtonPress"):Fire()
+end
+
+-- The actual code
+
+Balls.ChildAdded:Connect(function(Ball)
+    if not VerifyBall(Ball) then
+        return
+    end
+    
+    print(`Ball Spawned: {Ball}`)
+    
+    local OldPosition = Ball.Position
+    local OldTick = tick()
+    
+    Ball:GetPropertyChangedSignal("Position"):Connect(function()
+        if IsTarget() then -- No need to do the math if we're not being attacked.
+            local Distance = (Ball.Position - workspace.CurrentCamera.Focus.Position).Magnitude
+            local Velocity = (OldPosition - Ball.Position).Magnitude -- Fix for .Velocity not working. Yes I got the lowest possible grade in accuplacer math.
+            
+            print(`Distance: {Distance}\nVelocity: {Velocity}\nTime: {Distance / Velocity}`)
+        
+            if (Distance / Velocity) <= 10 then -- Sorry for the magic number. This just works. No, you don't get a slider for this because it's 2am.
+                Parry()
+            end
+        end
+        
+        if (tick() - OldTick >= 1/60) then -- Don't want it to update too quickly because my velocity implementation is aids. Yes, I tried Ball.Velocity. No, it didn't work.
+            OldTick = tick()
+            OldPosition = Ball.Position
+        end
+    end)
+end)
+
+-- Auto Parry Configurations
 local auto_parry_enabled = false
 local parry_distance = 10
 local parry_delay = 0.3
@@ -14,13 +67,6 @@ local parry_duration = 0.8
 local cooldown = false
 local spam_speed = 0.1
 
--- Aimbot configurations
-local aimbot_enabled = false
-local silent_aim_enabled = false
-local esp_enabled = false
-local wallhack_enabled = false
-
--- Function to detect balls within range
 local function detectBalls()
     local balls = {}
     for _, obj in pairs(workspace:GetChildren()) do
@@ -34,59 +80,54 @@ local function detectBalls()
     return balls
 end
 
--- Function to perform parry
 local function performParry()
     if cooldown then return end
     cooldown = true
     local humanoid = Character:FindFirstChildOfClass("Humanoid")
     if humanoid then
-        -- Create a new animation instance for the parry action
         local parryAnimation = Instance.new("Animation")
-        parryAnimation.AnimationId = "rbxassetid://6377993410"  -- Example Block animation ID
+        parryAnimation.AnimationId = "rbxassetid://6377993410" -- Example Block animation ID
         local animTrack = humanoid:LoadAnimation(parryAnimation)
         
-        -- Play the animation
         animTrack:Play()
-        
-        -- Wait for the animation duration before stopping it
         task.wait(parry_duration)
         animTrack:Stop()
     end
     cooldown = false
 end
 
--- Function to enable auto parry
 local function autoParry()
     while auto_parry_enabled do
         local balls = detectBalls()
         if #balls > 0 then
             performParry()
         end
-        task.wait(parry_delay)  -- Add a slight delay to prevent it from constantly checking
+        task.wait(parry_delay)
     end
 end
 
--- Aimbot function
+-- Aimbot and ESP features (if you want them in the same script)
+local aimbot_enabled = false
+local silent_aim_enabled = false
+local esp_enabled = false
+local wallhack_enabled = false
+
 local function aimbot()
     while aimbot_enabled do
         local closestTarget = nil
         local closestDistance = math.huge
-        
         for _, player in pairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local target = player.Character
                 local targetPos = target.HumanoidRootPart.Position
                 local distance = (targetPos - rootPart.Position).Magnitude
-
                 if distance < closestDistance then
                     closestTarget = target
                     closestDistance = distance
                 end
             end
         end
-
         if closestTarget then
-            -- Silent aim: Adjust camera to aim at the target
             if silent_aim_enabled then
                 Camera.CFrame = CFrame.new(Camera.CFrame.Position, closestTarget.HumanoidRootPart.Position)
             end
@@ -95,7 +136,6 @@ local function aimbot()
     end
 end
 
--- ESP (Enemy ESP) function
 local function esp()
     while esp_enabled do
         for _, player in pairs(Players:GetPlayers()) do
@@ -103,9 +143,7 @@ local function esp()
                 local target = player.Character
                 local targetPos = target.HumanoidRootPart.Position
                 local screenPos, onScreen = Camera:WorldToScreenPoint(targetPos)
-
                 if onScreen then
-                    -- Create ESP box on the screen
                     local espBox = Instance.new("Frame")
                     espBox.Size = UDim2.new(0, 50, 0, 50)
                     espBox.Position = UDim2.new(0, screenPos.X - 25, 0, screenPos.Y - 25)
@@ -119,27 +157,25 @@ local function esp()
     end
 end
 
--- Wallhack function
 local function wallhack()
     while wallhack_enabled do
         for _, obj in pairs(workspace:GetChildren()) do
             if obj:IsA("BasePart") then
-                obj.Transparency = 0.5  -- Set wall transparency to see through it
-                obj.CanCollide = false  -- Disable collisions to walk through walls
+                obj.Transparency = 0.5
+                obj.CanCollide = false
             end
         end
         task.wait(0.1)
     end
 end
 
--- UI and interface with Kavo UI Library
+-- Create UI (using Kavo UI Library)
 local success, Library = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 end)
 
 if not success then
     warn("Error loading Kavo UI Library: " .. tostring(Library))
-    -- If the executor does not support the script, show a notification with the Discord link
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Executor Not Supported",
         Text = "Your executor does not support this script. Join our Discord for help: https://discord.gg/EFbXv4Wf",
@@ -153,72 +189,60 @@ end
 -- Create UI
 local Window = Library.CreateLib("Blade Ball Auto-Parry + Aimbot", "DarkTheme")
 
--- Blade Ball Auto-Parry Tab
 local BladeBallTab = Window:NewTab("Blade Ball Auto-Parry")
 local AutoParrySection = BladeBallTab:NewSection("Auto-Parry Settings")
 
--- Toggle for enabling auto parry
 AutoParrySection:NewToggle("Enable Auto-Parry", "Activate the auto parry functionality", function(state)
     auto_parry_enabled = state
     if auto_parry_enabled then
-        task.spawn(autoParry)  -- Start the auto parry loop
+        task.spawn(autoParry)
     end
 end)
 
--- Slider to adjust parry distance
 AutoParrySection:NewSlider("Parry Distance", "Set the distance for parrying balls", 100, 1, function(value)
-    parry_distance = value  -- Adjust the distance for detecting balls
+    parry_distance = value
 end)
 
--- Slider to adjust parry delay
 AutoParrySection:NewSlider("Parry Delay", "Set the delay before parrying balls", 2, 0.1, function(value)
-    parry_delay = value  -- Adjust the delay before the parry happens
+    parry_delay = value
 end)
 
--- Slider to adjust parry duration (animation time)
 AutoParrySection:NewSlider("Parry Duration", "Set the duration of the parry animation", 2, 0.1, function(value)
-    parry_duration = value  -- Adjust the duration for the parry animation
+    parry_duration = value
 end)
 
--- Slider to adjust spam speed (how fast the auto parry checks)
 AutoParrySection:NewSlider("Spam Speed", "Set how fast the script checks for balls", 1, 0.1, function(value)
-    spam_speed = value  -- Adjust the speed at which the script checks for balls
+    spam_speed = value
 end)
 
--- Arsenal Aimbot & ESP Tab
 local ArsenalTab = Window:NewTab("Arsenal Aimbot & ESP")
 local ArsenalSection = ArsenalTab:NewSection("Aimbot & ESP Settings")
 
--- Toggle for enabling aimbot
 ArsenalSection:NewToggle("Enable Aimbot", "Activate the aimbot to automatically aim at the closest target", function(state)
     aimbot_enabled = state
     if aimbot_enabled then
-        task.spawn(aimbot)  -- Start the aimbot loop
+        task.spawn(aimbot)
     end
 end)
 
--- Toggle for enabling silent aim
 ArsenalSection:NewToggle("Enable Silent Aim", "Enable silent aim (makes the aimbot smooth)", function(state)
     silent_aim_enabled = state
 end)
 
--- Toggle for enabling ESP
 ArsenalSection:NewToggle("Enable ESP", "Enable ESP to show enemy locations", function(state)
     esp_enabled = state
     if esp_enabled then
-        task.spawn(esp)  -- Start the ESP loop
+        task.spawn(esp)
     end
 end)
 
--- Toggle for enabling wallhack
 ArsenalSection:NewToggle("Enable Wallhack", "Enable wallhack to see through walls", function(state)
     wallhack_enabled = state
     if wallhack_enabled then
-        task.spawn(wallhack)  -- Start the wallhack loop
+        task.spawn(wallhack)
     end
 end)
 
--- Notification after loading the script
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Blade Ball Auto-Parry + Aimbot Loaded",
     Text = "Customize your settings in the Kavo UI!",
