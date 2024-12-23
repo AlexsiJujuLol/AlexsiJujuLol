@@ -2,173 +2,178 @@
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 
 -- Create a Window
-local Library_Window = Library.Add_Window('ikorz')
+local Library_Window = Library.Add_Window('Acceptions')
 
--- Create a Tab for "ikorz"
-local Ikorz_Tab = Library_Window.Create_Tab({
-    name = 'ikorz',
+-- Create a Tab for "Blatant"
+local Blatant_Tab = Library_Window.Create_Tab({
+    name = 'Blatant',
     icon = 'rbxassetid://'
 })
 
--- Create a Section inside the Ikorz Tab
-local Ikorz_Section = Ikorz_Tab.Create_Section()
+-- Create a Section inside the Blatant Tab
+local Blatant_Section = Blatant_Tab.Create_Section()
 
--- Auto Parry Dropdown Toggle
-local Auto_Parry = Ikorz_Section.Create_DropToggle({
+-- Create the Auto Parry Dropdown Toggle
+local Auto_Parry = Blatant_Section.Create_DropToggle({
     name = 'Auto Parry',
     section = 'left',
     flag = 'Auto_Parry',
-    options = {'Custom', 'Random', 'Backwards'},
+    options = {'Custom', 'Random', 'Backwards'},  -- Options for the dropdown
     callback = function(state)
         if state then
-            print('Auto Parry: Enabled')
+            print('ap - true')  -- Will print when Auto Parry is enabled
         else
-            print('Auto Parry: Disabled')
+            print('ap - false')  -- Will print when Auto Parry is disabled
         end
     end,
     callback2 = function(selected)
-        print('Auto Parry Selected:', selected)
+        print('Selected:', selected)  -- Will print the selected option from the dropdown
     end
 })
 
--- Arsenal Tab with Aimbot and Silent Aimbot
+-- Create a Tab for "Arsenal"
 local Arsenal_Tab = Library_Window.Create_Tab({
     name = 'Arsenal',
     icon = 'rbxassetid://'
 })
 
+-- Create a Section inside the Arsenal Tab
 local Arsenal_Section = Arsenal_Tab.Create_Section()
 
--- Aimbot Toggle (for targeting closest player)
+-- Aimbot Toggle
 local Aimbot = Arsenal_Section.Create_Toggle({
     name = 'Aimbot',
     flag = 'Aimbot',
     callback = function(state)
         if state then
-            print('Aimbot: Activated')
-            -- Implement aimbot logic here
-            local player = game.Players.LocalPlayer
-            local mouse = player:GetMouse()
-            local closestPlayer = nil
-            local closestDistance = math.huge
-
-            -- Loop through all players to find the closest target
-            for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                if targetPlayer.Character and targetPlayer ~= player then
-                    local target = targetPlayer.Character:FindFirstChild('HumanoidRootPart')
-                    if target then
-                        local distance = (target.Position - mouse.Hit.p).Magnitude
-                        if distance < closestDistance then
-                            closestDistance = distance
-                            closestPlayer = target
+            print('Aimbot activated')
+            -- Aimbot logic (aiming at closest target)
+            game:GetService("RunService").RenderStepped:Connect(function()
+                local closestPlayer = nil
+                local shortestDistance = math.huge
+                for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player ~= game.Players.LocalPlayer then
+                        local distance = (player.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+                        if distance < shortestDistance then
+                            closestPlayer = player
+                            shortestDistance = distance
                         end
                     end
                 end
-            end
-
-            -- Aim at closest player
-            if closestPlayer then
-                local targetPosition = closestPlayer.Position
-                -- Simulate an aim at the target position
-                -- Adjust camera or view here for mobile aiming
-            end
+                if closestPlayer then
+                    -- Aim at the closest player
+                    local character = closestPlayer.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local targetPosition = character.HumanoidRootPart.Position
+                        -- Smooth aiming
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, targetPosition)
+                    end
+                end
+            end)
         else
-            print('Aimbot: Deactivated')
+            print('Aimbot deactivated')
         end
     end
 })
 
--- Silent Aimbot (smoother aim with no visual snapping)
+-- Silent Aimbot Toggle
 local Silent_Aimbot = Arsenal_Section.Create_Toggle({
     name = 'Silent Aimbot',
     flag = 'Silent_Aimbot',
     callback = function(state)
         if state then
-            print('Silent Aimbot: Activated')
-            -- Implement silent aimbot logic here
-            local player = game.Players.LocalPlayer
-            local mouse = player:GetMouse()
-            local closestPlayer = nil
-            local closestDistance = math.huge
-
-            -- Loop through all players to find the closest target
-            for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                if targetPlayer.Character and targetPlayer ~= player then
-                    local target = targetPlayer.Character:FindFirstChild('HumanoidRootPart')
-                    if target then
-                        local distance = (target.Position - mouse.Hit.p).Magnitude
-                        if distance < closestDistance then
-                            closestDistance = distance
-                            closestPlayer = target
+            print('Silent Aimbot activated')
+            -- Silent Aimbot logic (smooth aiming without snapping the camera)
+            game:GetService("RunService").RenderStepped:Connect(function()
+                local closestPlayer = nil
+                local shortestDistance = math.huge
+                for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player ~= game.Players.LocalPlayer then
+                        local distance = (player.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+                        if distance < shortestDistance then
+                            closestPlayer = player
+                            shortestDistance = distance
                         end
                     end
                 end
-            end
-
-            -- Aim silently at closest player (without visible snapping)
-            if closestPlayer then
-                local targetPosition = closestPlayer.Position
-                -- Smoothly aim at targetPosition without visual snapping
-                -- Mobile will have its own input system, so you'd simulate a smooth transition of aim position
-            end
+                if closestPlayer then
+                    -- Smoothly aim towards the closest player
+                    local character = closestPlayer.Character
+                    if character and character:FindFirstChild("HumanoidRootPart") then
+                        local targetPosition = character.HumanoidRootPart.Position
+                        local currentPos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+                        local direction = (targetPosition - currentPos).unit
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(currentPos + direction * 0.5)
+                    end
+                end
+            end)
         else
-            print('Silent Aimbot: Deactivated')
+            print('Silent Aimbot deactivated')
         end
     end
 })
 
--- Triggerbot
-local Triggerbot = Arsenal_Section.Create_Toggle({
-    name = 'Triggerbot',
-    flag = 'Triggerbot',
-    callback = function(state)
-        if state then
-            print('Triggerbot activated')
-            -- Implement triggerbot logic here
-        else
-            print('Triggerbot deactivated')
-        end
-    end
-})
-
--- Wallhack
+-- Wallhack Toggle
 local Wallhack = Arsenal_Section.Create_Toggle({
     name = 'Wallhack',
     flag = 'Wallhack',
     callback = function(state)
         if state then
             print('Wallhack enabled')
-            -- Implement wallhack logic here
+            -- Enable Wallhack (changing transparency of parts to make them visible through walls)
+            for _, part in pairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                    part.Transparency = 0.5  -- Make parts semi-transparent
+                end
+            end
         else
             print('Wallhack disabled')
+            -- Reset Wallhack
+            for _, part in pairs(workspace:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                    part.Transparency = 0  -- Reset transparency
+                end
+            end
         end
     end
 })
 
--- ESP (Extra Sensory Perception)
+-- ESP (Extra Sensory Perception) Toggle
 local ESP = Arsenal_Section.Create_Toggle({
     name = 'ESP',
     flag = 'ESP',
     callback = function(state)
         if state then
             print('ESP enabled')
-            -- Implement ESP logic here
+            -- Enable ESP (creating outlines above players)
+            for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Parent = player.Character
+                    billboard.Adornee = player.Character.HumanoidRootPart
+                    billboard.Size = UDim2.new(0, 50, 0, 50)
+                    billboard.StudsOffset = Vector3.new(0, 2, 0)
+                    local textLabel = Instance.new("TextLabel")
+                    textLabel.Parent = billboard
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.Text = player.Name
+                    textLabel.TextColor3 = Color3.new(1, 0, 0)  -- Red text color
+                end
+            end
         else
             print('ESP disabled')
+            -- Remove ESP
+            for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                if player.Character then
+                    local billboard = player.Character:FindFirstChild("BillboardGui")
+                    if billboard then
+                        billboard:Destroy()
+                    end
+                end
+            end
         end
     end
 })
-
--- Helper function to simulate smooth aiming for mobile
-local function SmoothAim(targetPosition)
-    local player = game.Players.LocalPlayer
-    local mouse = player:GetMouse()
-    
-    -- You can adjust the speed of aim transition here
-    local speed = 10
-    local direction = (targetPosition - mouse.Hit.p).unit
-    local newPosition = mouse.Hit.p + direction * speed
-
-    -- Move camera smoothly towards the new position
-    -- Here you would apply a tween or a gradual camera transition
-end
