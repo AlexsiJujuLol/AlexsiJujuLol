@@ -54,43 +54,73 @@ local function autoParry()
     end
 end
 
--- UI and interface with Kavo UI Library
+-- UI and interface with Rayfield UI Library
 local success, Library = pcall(function()
-    return loadstring(game:HttpGet("https://pastebin.com/raw/Edjt93G8"))() -- Replace with your library link
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source"))() -- Replace with your library link
 end)
 
 if not success then
-    warn("Error loading Kavo UI Library: " .. tostring(Library))
+    warn("Error loading Rayfield UI Library: " .. tostring(Library))
     return
 else
-    print("Kavo UI Library loaded successfully")
+    print("Rayfield UI Library loaded successfully")
 end
 
-local Window = Library.CreateLib("Blade Ball Auto-Parry", "DarkTheme")
-local MainTab = Window:NewTab("Main")
-local MainSection = MainTab:NewSection("Auto-Parry")
+local Window = Library:CreateWindow({
+    Name = "Blade Ball Auto-Parry",
+    Theme = Library.Themes.Dark,
+    SaveConfig = true,
+    ConfigFolder = "BladeBallConfig"
+})
 
-MainSection:NewToggle("Enable Auto-Parry", "Toggle automatic parry functionality", function(state)
-    auto_parry_enabled = state
-    if auto_parry_enabled then
-        task.spawn(autoParry)
+local MainTab = Window:CreateTab("Main")
+local MainSection = MainTab:CreateSection("Auto-Parry")
+
+MainSection:CreateToggle({
+    Name = "Enable Auto-Parry",
+    Callback = function(state)
+        auto_parry_enabled = state
+        if auto_parry_enabled then
+            task.spawn(autoParry)
+        end
     end
-end)
+})
 
-MainSection:NewSlider("Parry Distance", "Set the distance for parrying threats", 20, 1, function(value)
-    parry_distance = value
-end)
+MainSection:CreateSlider({
+    Name = "Parry Distance",
+    Range = {1, 20},
+    Increment = 1,
+    Suffix = "units",
+    CurrentValue = 10,
+    Callback = function(value)
+        parry_distance = value
+    end
+})
 
-MainSection:NewSlider("Parry Delay", "Set the delay before parrying threats", 2, 0.1, function(value)
-    parry_delay = value
-end)
+MainSection:CreateSlider({
+    Name = "Parry Delay",
+    Range = {0.1, 2},
+    Increment = 0.1,
+    Suffix = "seconds",
+    CurrentValue = 0.5,
+    Callback = function(value)
+        parry_delay = value
+    end
+})
 
-MainSection:NewSlider("Spam Speed", "Set the speed of spamming parry", 1, 0.1, function(value)
-    spam_speed = value
-end)
+MainSection:CreateSlider({
+    Name = "Spam Speed",
+    Range = {0.1, 1},
+    Increment = 0.1,
+    Suffix = "seconds",
+    CurrentValue = 0.1,
+    Callback = function(value)
+        spam_speed = value
+    end
+})
 
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Blade Ball Auto-Parry Loaded",
-    Text = "Customize your settings in the Kavo UI!",
+    Text = "Customize your settings in the Rayfield UI!",
     Duration = 5
 })
