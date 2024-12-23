@@ -40,6 +40,10 @@ local Arsenal_Tab = Library_Window.Create_Tab({
 -- Create a Section inside the Arsenal Tab
 local Arsenal_Section = Arsenal_Tab.Create_Section()
 
+-- Store the RenderStepped connections for Aimbot and Silent Aimbot
+local aimbotConnection
+local silentAimbotConnection
+
 -- Aimbot Toggle
 local Aimbot = Arsenal_Section.Create_Toggle({
     name = 'Aimbot',
@@ -48,7 +52,7 @@ local Aimbot = Arsenal_Section.Create_Toggle({
         if state then
             print('Aimbot activated')
             -- Aimbot logic (aiming at closest target)
-            game:GetService("RunService").RenderStepped:Connect(function()
+            aimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
                 local closestPlayer = nil
                 local shortestDistance = math.huge
                 for _, player in pairs(game:GetService("Players"):GetPlayers()) do
@@ -72,6 +76,11 @@ local Aimbot = Arsenal_Section.Create_Toggle({
             end)
         else
             print('Aimbot deactivated')
+            -- Disconnect the RenderStepped connection when the aimbot is disabled
+            if aimbotConnection then
+                aimbotConnection:Disconnect()
+                aimbotConnection = nil
+            end
         end
     end
 })
@@ -84,7 +93,7 @@ local Silent_Aimbot = Arsenal_Section.Create_Toggle({
         if state then
             print('Silent Aimbot activated')
             -- Silent Aimbot logic (smooth aiming without snapping the camera)
-            game:GetService("RunService").RenderStepped:Connect(function()
+            silentAimbotConnection = game:GetService("RunService").RenderStepped:Connect(function()
                 local closestPlayer = nil
                 local shortestDistance = math.huge
                 for _, player in pairs(game:GetService("Players"):GetPlayers()) do
@@ -109,6 +118,11 @@ local Silent_Aimbot = Arsenal_Section.Create_Toggle({
             end)
         else
             print('Silent Aimbot deactivated')
+            -- Disconnect the RenderStepped connection when silent aimbot is disabled
+            if silentAimbotConnection then
+                silentAimbotConnection:Disconnect()
+                silentAimbotConnection = nil
+            end
         end
     end
 })
