@@ -1,268 +1,32 @@
-local Debug = false -- Set this to true if you want my debug output.
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
+-- Load the Library
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 
-local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local Remotes = ReplicatedStorage:WaitForChild("Remotes", 9e9)
-local Balls = workspace:WaitForChild("Balls", 9e9)
+-- Create a Window
+local Library_Window = Library.Add_Window('ikorz')
 
--- Functions
-
-local function print(...) -- Debug print.
-    if Debug then
-        warn(...)
-    end
-end
-
-local function VerifyBall(Ball) -- Returns nil if the ball isn't a valid projectile; true if it's the right ball.
-    if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
-        return true
-    end
-end
-
-local function IsTarget() -- Returns true if we are the current target.
-    return (Player.Character and Player.Character:FindFirstChild("Highlight"))
-end
-
-local function Parry() -- Parries.
-    Remotes:WaitForChild("ParryButtonPress"):Fire()
-end
-
--- The actual code for detecting and parrying balls
-
-Balls.ChildAdded:Connect(function(Ball)
-    if not VerifyBall(Ball) then
-        return
-    end
-    
-    print(`Ball Spawned: {Ball}`)
-    
-    local OldPosition = Ball.Position
-    local OldTick = tick()
-    
-    Ball:GetPropertyChangedSignal("Position"):Connect(function()
-        if IsTarget() then -- No need to do the math if we're not being attacked.
-            local Distance = (Ball.Position - workspace.CurrentCamera.Focus.Position).Magnitude
-            local Velocity = (OldPosition - Ball.Position).Magnitude -- Fix for .Velocity not working.
-            
-            print(`Distance: {Distance}\nVelocity: {Velocity}\nTime: {Distance / Velocity}`)
-        
-            if (Distance / Velocity) <= 10 then -- Magic number works for auto parrying.
-                Parry()
-            end
-        end
-        
-        if (tick() - OldTick >= 1/60) then
-            OldTick = tick()
-            OldPosition = Ball.Position
-        end
-    end)
-end)
-
--- Auto Parry Configurations
-local auto_parry_enabled = false
-local parry_distance = 10
-local parry_delay = 0.3
-local parry_duration = 0.8
-local cooldown = false
-local spam_speed = 0.1
-
--- Fish Configurations
-local auto_shake_enabled = false
-local auto_reel_enabled = false
-local auto_bait_enabled = false
-local auto_cast_enabled = false
-local shake_delay = 1  -- Delay for Auto Shake (can be adjusted)
-local fast_shake_delay = 0.3  -- Fast shake delay
-local freeze_character_enabled = false
-
--- Function to auto shake (simulate shake action)
-local function autoShake()
-    while auto_shake_enabled do
-        if auto_shake_enabled then
-            Remotes:WaitForChild("ShakeButtonPress"):Fire()  -- Adjust to the actual remote name
-        end
-        task.wait(shake_delay)
-    end
-end
-
--- Function to auto reel
-local function autoReel()
-    while auto_reel_enabled do
-        if auto_reel_enabled then
-            Remotes:WaitForChild("ReelButtonPress"):Fire()  -- Adjust to the actual remote name
-        end
-        task.wait(0.5)  -- Adjust reel delay
-    end
-end
-
--- Function to auto bait
-local function autoBait()
-    while auto_bait_enabled do
-        if auto_bait_enabled then
-            Remotes:WaitForChild("BaitButtonPress"):Fire()  -- Adjust to the actual remote name
-        end
-        task.wait(1)  -- Adjust bait delay
-    end
-end
-
--- Function to auto cast
-local function autoCast()
-    while auto_cast_enabled do
-        if auto_cast_enabled then
-            Remotes:WaitForChild("CastButtonPress"):Fire()  -- Adjust to the actual remote name
-        end
-        task.wait(2)  -- Adjust cast delay
-    end
-end
-
--- Function to freeze the character (e.g., stop movement)
-local function freezeCharacter()
-    while freeze_character_enabled do
-        if freeze_character_enabled then
-            local humanoid = Character:FindFirstChild("Humanoid")
-            if humanoid then
-                humanoid.PlatformStand = true  -- Stops movement
-            end
-        end
-        task.wait(0.1)
-    end
-end
-
--- UI Setup (using Kavo UI Library)
-local success, Library = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-end)
-
-if not success then
-    warn("Error loading Kavo UI Library: " .. tostring(Library))
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Executor Not Supported",
-        Text = "Your executor does not support this script. Join our Discord for help: https://discord.gg/EFbXv4Wf",
-        Duration = 5
-    })
-    return
-else
-    print("Kavo UI Library loaded successfully")
-end
-
--- Create UI
-local Window = Library.CreateLib("Blade Ball Auto-Parry + Aimbot + Fish", "DarkTheme")
-
--- Blade Ball Auto-Parry Tab with Description
-local BladeBallTab = Window:NewTab("Blade Ball Auto-Parry")
-local AutoParrySection = BladeBallTab:NewSection("Auto-Parry Settings")
-AutoParrySection:NewLabel("Auto-Parry automatically parries incoming balls based on distance and speed.")
-
-AutoParrySection:NewToggle("Enable Auto-Parry", "Activate the auto parry functionality", function(state)
-    auto_parry_enabled = state
-    if auto_parry_enabled then
-        task.spawn(autoParry)
-    end
-end)
-
-AutoParrySection:NewSlider("Parry Distance", "Set the distance for parrying balls", 100, 1, function(value)
-    parry_distance = value
-end)
-
-AutoParrySection:NewSlider("Parry Delay", "Set the delay before parrying balls", 2, 0.1, function(value)
-    parry_delay = value
-end)
-
-AutoParrySection:NewSlider("Parry Duration", "Set the duration of the parry animation", 2, 0.1, function(value)
-    parry_duration = value
-end)
-
-AutoParrySection:NewSlider("Spam Speed", "Set how fast the script checks for balls", 1, 0.1, function(value)
-    spam_speed = value
-end)
-
--- Fish Tab with Description
-local FishTab = Window:NewTab("Fish")
-local FishSection = FishTab:NewSection("Fishing Settings")
-FishSection:NewLabel("Enable auto fishing features such as auto shake, auto reel, auto bait, and auto cast.")
-
-FishSection:NewToggle("Enable Auto Shake", "Activate auto shake to reel in faster", function(state)
-    auto_shake_enabled = state
-    if auto_shake_enabled then
-        task.spawn(autoShake)
-    end
-end)
-
-FishSection:NewSlider("Shake Delay", "Set the delay for shake action", 2, 0.1, function(value)
-    shake_delay = value
-end)
-
-FishSection:NewToggle("Enable Fast Shake", "Activate fast shake for quicker action", function(state)
-    if state then
-        shake_delay = fast_shake_delay
-    else
-        shake_delay = 1  -- Reset to default delay
-    end
-end)
-
-FishSection:NewToggle("Enable Auto Reel", "Activate auto reel to automatically reel the fish", function(state)
-    auto_reel_enabled = state
-    if auto_reel_enabled then
-        task.spawn(autoReel)
-    end
-end)
-
-FishSection:NewToggle("Enable Auto Bait", "Activate auto bait to automatically bait the rod", function(state)
-    auto_bait_enabled = state
-    if auto_bait_enabled then
-        task.spawn(autoBait)
-    end
-end)
-
-FishSection:NewToggle("Enable Auto Cast", "Activate auto cast to automatically cast the rod", function(state)
-    auto_cast_enabled = state
-    if auto_cast_enabled then
-        task.spawn(autoCast)
-    end
-end)
-
-FishSection:NewToggle("Freeze Character", "Freeze the character in place (disable movement)", function(state)
-    freeze_character_enabled = state
-    if freeze_character_enabled then
-        task.spawn(freezeCharacter)
-    end
-end)
-
--- Arsenal Tab with Description
-local ArsenalTab = Window:NewTab("Arsenal Aimbot & ESP")
-local ArsenalSection = ArsenalTab:NewSection("Aimbot & ESP Settings")
-ArsenalSection:NewLabel("Aimbot automatically targets the closest enemy and ESP shows enemy locations.")
-
-ArsenalSection:NewToggle("Enable Aimbot", "Activate the aimbot to automatically aim at the closest target", function(state)
-    aimbot_enabled = state
-    if aimbot_enabled then
-        task.spawn(aimbot)
-    end
-end)
-
-ArsenalSection:NewToggle("Enable Silent Aim", "Enable silent aim (makes the aimbot smooth)", function(state)
-    silent_aim_enabled = state
-end)
-
-ArsenalSection:NewToggle("Enable ESP", "Enable ESP to show enemy locations", function(state)
-    esp_enabled = state
-    if esp_enabled then
-        task.spawn(esp)
-    end
-end)
-
-ArsenalSection:NewToggle("Enable Wallhack", "Enable wallhack to see through walls", function(state)
-    wallhack_enabled = state
-    if wallhack_enabled then
-        task.spawn(wallhack)
-    end
-end)
-
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Blade Ball Auto-Parry + Aimbot + Fish Loaded",
-    Text = "Customize your settings in the Kavo UI!",
-    Duration = 5
+-- Create a Tab for "ikorz" instead of "Blatant"
+local Ikorz_Tab = Library_Window.Create_Tab({
+    name = 'ikorz',
+    icon = 'rbxassetid://'
 })
 
-print("Script executed successfully")
+-- Create a Section inside the Ikorz Tab
+local Ikorz_Section = Ikorz_Tab.Create_Section()
+
+-- Create the Auto Parry Dropdown Toggle
+local Auto_Parry = Ikorz_Section.Create_DropToggle({
+    name = 'Auto Parry',
+    section = 'left',
+    flag = 'Auto_Parry',
+    options = {'Custom', 'Random', 'Backwards'},  -- Options for the dropdown
+    callback = function(state)
+        if state then
+            print('ap - true')  -- Will print when Auto Parry is enabled
+        else
+            print('ap - false')  -- Will print when Auto Parry is disabled
+        end
+    end,
+    callback2 = function(selected)
+        print('Selected:', selected)  -- Will print the selected option from the dropdown
+    end
+})
