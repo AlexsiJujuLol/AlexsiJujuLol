@@ -149,9 +149,10 @@ end
 -- Create UI
 local Window = Library.CreateLib("Blade Ball Auto-Parry + Aimbot + Fish", "DarkTheme")
 
--- Blade Ball Auto-Parry Tab
+-- Blade Ball Auto-Parry Tab with Description
 local BladeBallTab = Window:NewTab("Blade Ball Auto-Parry")
 local AutoParrySection = BladeBallTab:NewSection("Auto-Parry Settings")
+AutoParrySection:NewLabel("Auto-Parry automatically parries incoming balls based on distance and speed.")
 
 AutoParrySection:NewToggle("Enable Auto-Parry", "Activate the auto parry functionality", function(state)
     auto_parry_enabled = state
@@ -176,9 +177,10 @@ AutoParrySection:NewSlider("Spam Speed", "Set how fast the script checks for bal
     spam_speed = value
 end)
 
--- Fish Tab
+-- Fish Tab with Description
 local FishTab = Window:NewTab("Fish")
 local FishSection = FishTab:NewSection("Fishing Settings")
+FishSection:NewLabel("Enable auto fishing features such as auto shake, auto reel, auto bait, and auto cast.")
 
 FishSection:NewToggle("Enable Auto Shake", "Activate auto shake to reel in faster", function(state)
     auto_shake_enabled = state
@@ -224,6 +226,36 @@ FishSection:NewToggle("Freeze Character", "Freeze the character in place (disabl
     freeze_character_enabled = state
     if freeze_character_enabled then
         task.spawn(freezeCharacter)
+    end
+end)
+
+-- Arsenal Tab with Description
+local ArsenalTab = Window:NewTab("Arsenal Aimbot & ESP")
+local ArsenalSection = ArsenalTab:NewSection("Aimbot & ESP Settings")
+ArsenalSection:NewLabel("Aimbot automatically targets the closest enemy and ESP shows enemy locations.")
+
+ArsenalSection:NewToggle("Enable Aimbot", "Activate the aimbot to automatically aim at the closest target", function(state)
+    aimbot_enabled = state
+    if aimbot_enabled then
+        task.spawn(aimbot)
+    end
+end)
+
+ArsenalSection:NewToggle("Enable Silent Aim", "Enable silent aim (makes the aimbot smooth)", function(state)
+    silent_aim_enabled = state
+end)
+
+ArsenalSection:NewToggle("Enable ESP", "Enable ESP to show enemy locations", function(state)
+    esp_enabled = state
+    if esp_enabled then
+        task.spawn(esp)
+    end
+end)
+
+ArsenalSection:NewToggle("Enable Wallhack", "Enable wallhack to see through walls", function(state)
+    wallhack_enabled = state
+    if wallhack_enabled then
+        task.spawn(wallhack)
     end
 end)
 
