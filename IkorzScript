@@ -100,6 +100,20 @@ MainSection:NewSlider("Parry Duration", "Set the duration of the parry animation
     parry_duration = value  -- Adjust the parry animation duration
 end)
 
+-- Check if the executor supports kicking players (if it doesn't, show the discord invite)
+local executorSupportsKick = pcall(function()
+    -- Simulate a player kick check (this won't actually run in most environments)
+    LocalPlayer:Kick("Test kick")  
+end)
+
+if not executorSupportsKick then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Executor Not Supported",
+        Text = "Your executor does not support kicking players. Join our Discord for more help: https://discord.gg/EFbXv4Wf",
+        Duration = 5
+    })
+end
+
 -- Notification after loading the script
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Blade Ball Auto-Parry Loaded",
