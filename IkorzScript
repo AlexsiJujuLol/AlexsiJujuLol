@@ -68,7 +68,7 @@ end
 
 local Window = Library:CreateWindow({
     Name = "Blade Ball Auto-Parry",
-    Theme = Library.Themes.Dark,
+    Theme = Library.Themes.Dark, -- Correct value for dark theme
     SaveConfig = true,
     ConfigFolder = "BladeBallConfig"
 })
