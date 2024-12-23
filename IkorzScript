@@ -13,129 +13,220 @@ local Ikorz_Tab = Library_Window.Create_Tab({
 -- Create a Section inside the Ikorz Tab
 local Ikorz_Section = Ikorz_Tab.Create_Section()
 
--- Create the Auto Parry Dropdown Toggle
+-- Auto Parry Dropdown Toggle
 local Auto_Parry = Ikorz_Section.Create_DropToggle({
     name = 'Auto Parry',
     section = 'left',
     flag = 'Auto_Parry',
-    options = {'Custom', 'Random', 'Backwards'},  -- Options for the dropdown
+    options = {'Custom', 'Random', 'Backwards'}, 
     callback = function(state)
         if state then
-            print('ap - true')  -- Will print when Auto Parry is enabled
+            print('Auto Parry: Enabled')
         else
-            print('ap - false')  -- Will print when Auto Parry is disabled
+            print('Auto Parry: Disabled')
         end
     end,
     callback2 = function(selected)
-        print('Selected:', selected)  -- Will print the selected option from the dropdown
+        print('Auto Parry Selected:', selected)
     end
 })
 
--- Create a Tab for "Death Ball"
-local Death_Ball_Tab = Library_Window.Create_Tab({
-    name = 'Death Ball',
-    icon = 'rbxassetid://'
-})
-
--- Create a Section inside the Death Ball Tab
-local Death_Ball_Section = Death_Ball_Tab.Create_Section()
-
--- Auto Parry Feature
-local Auto_Parry_DB = Death_Ball_Section.Create_Toggle({
-    name = 'Auto Parry',
-    flag = 'Auto_Parry_DB',
-    callback = function(state)
-        if state then
-            print('Death Ball Auto Parry activated')
-        else
-            print('Death Ball Auto Parry deactivated')
-        end
-    end
-})
-
--- Visual Auto Parry Feature
-local Visual_Auto_Parry_DB = Death_Ball_Section.Create_Toggle({
-    name = 'Visual Auto Parry',
-    flag = 'Visual_Auto_Parry_DB',
-    callback = function(state)
-        if state then
-            print('Death Ball Visual Auto Parry activated')
-        else
-            print('Death Ball Visual Auto Parry deactivated')
-        end
-    end
-})
-
--- Create a Tab for "Arsenal"
+-- Arsenal Tab with Aimbot and Other Features
 local Arsenal_Tab = Library_Window.Create_Tab({
     name = 'Arsenal',
     icon = 'rbxassetid://'
 })
 
--- Create a Section inside the Arsenal Tab
 local Arsenal_Section = Arsenal_Tab.Create_Section()
 
--- Aimbot Feature
+-- Aimbot
 local Aimbot = Arsenal_Section.Create_Toggle({
     name = 'Aimbot',
     flag = 'Aimbot',
     callback = function(state)
         if state then
-            print('Aimbot activated')
+            print('Aimbot: Activated')
+            -- Implement your aimbot logic here
         else
-            print('Aimbot deactivated')
+            print('Aimbot: Deactivated')
         end
     end
 })
 
--- Silent Aimbot Feature
+-- Silent Aimbot
 local Silent_Aimbot = Arsenal_Section.Create_Toggle({
     name = 'Silent Aimbot',
     flag = 'Silent_Aimbot',
     callback = function(state)
         if state then
-            print('Silent Aimbot activated')
+            print('Silent Aimbot: Activated')
+            -- Implement silent aimbot logic here
         else
-            print('Silent Aimbot deactivated')
+            print('Silent Aimbot: Deactivated')
         end
     end
 })
 
--- Triggerbot Feature
+-- Triggerbot
 local Triggerbot = Arsenal_Section.Create_Toggle({
     name = 'Triggerbot',
     flag = 'Triggerbot',
     callback = function(state)
         if state then
-            print('Triggerbot activated')
+            print('Triggerbot: Activated')
+            -- Implement triggerbot logic here
         else
-            print('Triggerbot deactivated')
+            print('Triggerbot: Deactivated')
         end
     end
 })
 
--- Wallhack Feature
+-- Wallhack
 local Wallhack = Arsenal_Section.Create_Toggle({
     name = 'Wallhack',
     flag = 'Wallhack',
     callback = function(state)
         if state then
-            print('Wallhack enabled')
+            print('Wallhack: Enabled')
+            -- Implement wallhack logic here
         else
-            print('Wallhack disabled')
+            print('Wallhack: Disabled')
         end
     end
 })
 
--- ESP (Extra Sensory Perception) Feature
+-- ESP
 local ESP = Arsenal_Section.Create_Toggle({
     name = 'ESP',
     flag = 'ESP',
     callback = function(state)
         if state then
-            print('ESP enabled')
+            print('ESP: Enabled')
+            -- Implement ESP logic here
         else
-            print('ESP disabled')
+            print('ESP: Disabled')
         end
     end
 })
+
+-- Fish Tab (auto play features like Shake, Reel, Cast)
+local Fish_Tab = Library_Window.Create_Tab({
+    name = 'Fish',
+    icon = 'rbxassetid://'
+})
+
+local Fish_Section = Fish_Tab.Create_Section()
+
+-- Auto-Shake Toggle
+local Auto_Shake = Fish_Section.Create_Toggle({
+    name = 'Auto Shake',
+    flag = 'Auto_Shake',
+    callback = function(state)
+        if state then
+            print('Auto Shake: Enabled')
+            -- Implement auto shake logic
+        else
+            print('Auto Shake: Disabled')
+        end
+    end
+})
+
+-- Auto-Reel Toggle
+local Auto_Reel = Fish_Section.Create_Toggle({
+    name = 'Auto Reel',
+    flag = 'Auto_Reel',
+    callback = function(state)
+        if state then
+            print('Auto Reel: Enabled')
+            -- Implement auto reel logic
+        else
+            print('Auto Reel: Disabled')
+        end
+    end
+})
+
+-- Auto-Cast Toggle
+local Auto_Cast = Fish_Section.Create_Toggle({
+    name = 'Auto Cast',
+    flag = 'Auto_Cast',
+    callback = function(state)
+        if state then
+            print('Auto Cast: Enabled')
+            -- Implement auto cast logic
+        else
+            print('Auto Cast: Disabled')
+        end
+    end
+})
+
+-- Blade Ball (Death Ball Detection and Auto Parry)
+local Blade_Ball_Tab = Library_Window.Create_Tab({
+    name = 'Blade Ball',
+    icon = 'rbxassetid://'
+})
+
+local Blade_Ball_Section = Blade_Ball_Tab.Create_Section()
+
+-- Auto Parry Toggle for Blade Ball
+local Auto_Parry_BladeBall = Blade_Ball_Section.Create_Toggle({
+    name = 'Auto Parry',
+    flag = 'Auto_Parry_BladeBall',
+    callback = function(state)
+        if state then
+            print('Auto Parry for Blade Ball: Enabled')
+            -- Implement auto parry logic for Blade Ball
+        else
+            print('Auto Parry for Blade Ball: Disabled')
+        end
+    end
+})
+
+-- Visualize Death Ball
+local function Visualize_DeathBall(ball)
+    -- Logic to visualize Death Ball
+    local marker = Instance.new("Part")
+    marker.Shape = Enum.PartType.Ball
+    marker.Size = Vector3.new(2, 2, 2)
+    marker.Color = Color3.fromRGB(255, 0, 0)  -- Red color for Death Ball
+    marker.Position = ball.Position
+    marker.Anchored = true
+    marker.CanCollide = false
+    marker.Parent = workspace
+    game:GetService("Debris"):AddItem(marker, 5) -- Auto-remove after 5 seconds
+end
+
+-- Handle Death Ball and Death Detection Logic
+local function Handle_DeathBall(ball)
+    -- Logic to handle Death Ball behavior and humanoid death (e.g., player hit by Death Ball)
+    if ball:GetAttribute("deathBall") == true then
+        Visualize_DeathBall(ball)
+        print("Death Ball detected!")
+        -- Handle death or damage to the player here (example: reducing health)
+    end
+end
+
+-- Watch for Death Ball Ball Spawn
+game.Workspace.Balls.ChildAdded:Connect(function(ball)
+    if ball:GetAttribute("deathBall") then
+        Handle_DeathBall(ball)
+    end
+end)
+
+-- Auto Parry Mechanism
+local function AutoParryMechanism()
+    while true do
+        if Auto_Parry_BladeBall then
+            -- Implement the logic to parry balls based on distance and speed
+            -- Look for balls within range
+            print("Checking for balls to parry...")
+        end
+        wait(1)  -- Adjust the frequency of checking
+    end
+end
+
+-- Call Auto Parry when enabled
+Auto_Parry_BladeBall.OnChange(function(state)
+    if state then
+        task.spawn(AutoParryMechanism)
+    end
+end)
