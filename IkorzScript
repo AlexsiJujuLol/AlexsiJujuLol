@@ -93,7 +93,7 @@ MainSection:CreateSlider({
     Name = "Parry Distance",
     Range = {1, 20},
     Increment = 1,
-    Suffix = "units",
+    Suffix = " units",
     CurrentValue = 10,
     Callback = function(value)
         parry_distance = value
@@ -105,7 +105,7 @@ MainSection:CreateSlider({
     Name = "Parry Delay",
     Range = {0.1, 2},
     Increment = 0.1,
-    Suffix = "seconds",
+    Suffix = " seconds",
     CurrentValue = 0.5,
     Callback = function(value)
         parry_delay = value
@@ -117,7 +117,7 @@ MainSection:CreateSlider({
     Name = "Spam Speed",
     Range = {0.1, 1},
     Increment = 0.1,
-    Suffix = "seconds",
+    Suffix = " seconds",
     CurrentValue = 0.1,
     Callback = function(value)
         spam_speed = value
