@@ -39,8 +39,8 @@ local function performParry()
         animTrack:Play()
         task.wait(parry_duration)
         animTrack:Stop()
-        cooldown = false
     end
+    cooldown = false
 end
 
 -- Function to enable auto parry
@@ -66,9 +66,10 @@ else
     print("Rayfield UI Library loaded successfully")
 end
 
+-- Create UI window and sections
 local Window = Library:CreateWindow({
     Name = "Blade Ball Auto-Parry",
-    Theme = Library.Themes.Dark, -- Correct value for dark theme
+    Theme = Library.Themes.Dark,
     SaveConfig = true,
     ConfigFolder = "BladeBallConfig"
 })
@@ -76,6 +77,7 @@ local Window = Library:CreateWindow({
 local MainTab = Window:CreateTab("Main")
 local MainSection = MainTab:CreateSection("Auto-Parry")
 
+-- Auto-Parry Toggle
 MainSection:CreateToggle({
     Name = "Enable Auto-Parry",
     Callback = function(state)
@@ -86,6 +88,7 @@ MainSection:CreateToggle({
     end
 })
 
+-- Parry Distance Slider
 MainSection:CreateSlider({
     Name = "Parry Distance",
     Range = {1, 20},
@@ -97,6 +100,7 @@ MainSection:CreateSlider({
     end
 })
 
+-- Parry Delay Slider
 MainSection:CreateSlider({
     Name = "Parry Delay",
     Range = {0.1, 2},
@@ -108,6 +112,7 @@ MainSection:CreateSlider({
     end
 })
 
+-- Spam Speed Slider
 MainSection:CreateSlider({
     Name = "Spam Speed",
     Range = {0.1, 1},
@@ -119,6 +124,7 @@ MainSection:CreateSlider({
     end
 })
 
+-- Notification on Load
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "Blade Ball Auto-Parry Loaded",
     Text = "Customize your settings in the Rayfield UI!",
