@@ -4,7 +4,7 @@ local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauC
 -- Create a Window
 local Library_Window = Library.Add_Window('ikorz')
 
--- Create a Tab for "ikorz" instead of "Blatant"
+-- Create a Tab for "ikorz"
 local Ikorz_Tab = Library_Window.Create_Tab({
     name = 'ikorz',
     icon = 'rbxassetid://'
@@ -28,5 +28,79 @@ local Auto_Parry = Ikorz_Section.Create_DropToggle({
     end,
     callback2 = function(selected)
         print('Selected:', selected)  -- Will print the selected option from the dropdown
+    end
+})
+
+-- Create a Tab for "Arsenal"
+local Arsenal_Tab = Library_Window.Create_Tab({
+    name = 'Arsenal',
+    icon = 'rbxassetid://'
+})
+
+-- Create a Section inside the Arsenal Tab
+local Arsenal_Section = Arsenal_Tab.Create_Section()
+
+-- Aimbot Feature
+local Aimbot = Arsenal_Section.Create_Toggle({
+    name = 'Aimbot',
+    flag = 'Aimbot',
+    callback = function(state)
+        if state then
+            print('Aimbot activated')
+        else
+            print('Aimbot deactivated')
+        end
+    end
+})
+
+-- Silent Aimbot Feature
+local Silent_Aimbot = Arsenal_Section.Create_Toggle({
+    name = 'Silent Aimbot',
+    flag = 'Silent_Aimbot',
+    callback = function(state)
+        if state then
+            print('Silent Aimbot activated')
+        else
+            print('Silent Aimbot deactivated')
+        end
+    end
+})
+
+-- Triggerbot Feature
+local Triggerbot = Arsenal_Section.Create_Toggle({
+    name = 'Triggerbot',
+    flag = 'Triggerbot',
+    callback = function(state)
+        if state then
+            print('Triggerbot activated')
+        else
+            print('Triggerbot deactivated')
+        end
+    end
+})
+
+-- Wallhack Feature
+local Wallhack = Arsenal_Section.Create_Toggle({
+    name = 'Wallhack',
+    flag = 'Wallhack',
+    callback = function(state)
+        if state then
+            print('Wallhack enabled')
+        else
+            print('Wallhack disabled')
+        end
+    end
+})
+
+-- ESP (Extra Sensory Perception) Feature
+local ESP = Arsenal_Section.Create_Toggle({
+    name = 'ESP',
+    flag = 'ESP',
+    callback = function(state)
+        if state then
+            print('ESP enabled')
+        else
+            print('ESP disabled')
+        end
     end
 })
