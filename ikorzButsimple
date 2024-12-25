@@ -1,7 +1,22 @@
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
-local Library_Window = Library.Add_Window('Acceptions')
+local Library
+local success, err = pcall(function()
+    Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
+end)
 
-local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
+if not success then
+    warn("Failed to load Library: " .. err)
+    return
+end
+
+local player = game.Players.LocalPlayer
+if not player then
+    warn("This script must be run as a LocalScript.")
+    return
+end
+
+-- Use a valid image asset ID for the icon (using a placeholder image)
+local BladeBall_Tab = Library.Add_Window('Acceptions')
+
 local BladeBall_Section = BladeBall_Tab.Create_Section()
 
 local auto_parry_enabled = false
@@ -19,7 +34,6 @@ local function UpdateParryCircle()
         return
     end
 
-    local player = game.Players.LocalPlayer
     if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
 
     if not parry_circle then
@@ -40,7 +54,6 @@ end
 -- Continuously update the parry circle's position as the player moves
 local function UpdateCirclePosition()
     while auto_parry_enabled and show_parry_circle and parry_circle do
-        local player = game.Players.LocalPlayer
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
         end
@@ -51,9 +64,8 @@ end
 -- Auto hit the ball logic
 local function AutoHitBall()
     while auto_parry_enabled do
-        if not game.Players.LocalPlayer.Character then return end
+        if not player.Character then return end
 
-        local player = game.Players.LocalPlayer
         local character = player.Character
         local rootPart = character:FindFirstChild("HumanoidRootPart")
 
@@ -82,7 +94,7 @@ local function AutoHitBall()
     end
 end
 
--- Toggle the Auto Parry feature on/off
+-- Toggle the Auto Hit Ball feature on/off
 BladeBall_Section.Create_Toggle({
     name = 'Auto Hit Ball',
     flag = 'Auto_Hit_Ball',
