@@ -20,10 +20,10 @@ local Library_Window = Library.Add_Window('Auto Parry Settings')
 -- Variables for Auto Parry
 local auto_parry_enabled = false
 local auto_parry_distance = 10
+local parry_delay = 0.1  -- Default delay between parries
 local show_parry_circle = false
 local parry_circle = nil
 local last_parry_time = 0
-local parry_cooldown = 0.1  -- Cooldown between parries to avoid too many actions
 
 -- Function to update the parry circle's position and size
 local function UpdateParryCircle()
@@ -70,7 +70,7 @@ local function AutoParryBall()
         local character = player.Character
         local rootPart = character:FindFirstChild("HumanoidRootPart")
 
-        if rootPart and tick() - last_parry_time > parry_cooldown then
+        if rootPart and tick() - last_parry_time > parry_delay then
             last_parry_time = tick()  -- Update last parry time
 
             local nearby_ball = nil
@@ -153,6 +153,19 @@ BladeBall_Section.Create_Slider({
     callback = function(value)
         auto_parry_distance = value
         UpdateParryCircle()  -- Update the circle whenever the distance changes
+    end
+})
+
+-- Slider to adjust parry delay
+BladeBall_Section.Create_Slider({
+    name = 'Parry Delay (Cooldown)',
+    flag = 'Parry_Delay',
+    min = 0.05,
+    max = 1,
+    default = parry_delay,
+    callback = function(value)
+        parry_delay = value
+        print("Parry delay set to: " .. parry_delay .. " seconds")
     end
 })
 
