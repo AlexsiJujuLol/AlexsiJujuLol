@@ -94,10 +94,14 @@ local function AutoParryBall()
     end
 end
 
+-- Create the Auto Parry Tab
+local AutoParry_Tab = Library.Add_Window('Auto Parry')
+local AutoParry_Section = AutoParry_Tab.Create_Section()
+
 -- Toggle the Auto Parry feature on/off
-BladeBall_Section.Create_Toggle({
-    name = 'Auto Parry',
-    flag = 'Auto_Parry',
+AutoParry_Section.Create_Toggle({
+    name = 'Auto Parry (Hit Ball)',
+    flag = 'Auto_Parry_Hit',
     callback = function(state)
         auto_parry_enabled = state
         if state then
@@ -108,7 +112,7 @@ BladeBall_Section.Create_Toggle({
 })
 
 -- Slider to adjust the parry distance
-BladeBall_Section.Create_Slider({
+AutoParry_Section.Create_Slider({
     name = 'Parry Distance',
     flag = 'Parry_Distance',
     min = 5,
@@ -121,7 +125,7 @@ BladeBall_Section.Create_Slider({
 })
 
 -- Toggle to show or hide the parry circle
-BladeBall_Section.Create_Toggle({
+AutoParry_Section.Create_Toggle({
     name = 'Show Parry Circle',
     flag = 'Show_Parry_Circle',
     callback = function(state)
