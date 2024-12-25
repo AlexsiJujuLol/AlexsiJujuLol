@@ -6,35 +6,38 @@ local BladeBall_Section = BladeBall_Tab.Create_Section()
 
 local auto_parry_enabled = false
 local auto_parry_distance = 10
+local show_parry_circle = false
 local parry_circle = nil
 
 local function UpdateParryCircle()
-    if parry_circle then parry_circle:Destroy() end
+    if not show_parry_circle then
+        if parry_circle then
+            parry_circle:Destroy()
+            parry_circle = nil
+        end
+        return
+    end
 
     local player = game.Players.LocalPlayer
     if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
 
-    parry_circle = Instance.new("Part")
-    parry_circle.Shape = Enum.PartType.Cylinder
-    parry_circle.Size = Vector3.new(0.2, auto_parry_distance * 2, auto_parry_distance * 2)
-    parry_circle.Anchored = true
-    parry_circle.CanCollide = false
-    parry_circle.Transparency = 0.5
-    parry_circle.Material = Enum.Material.Neon
-    parry_circle.Color = Color3.new(1, 0, 0)
-    parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
-    parry_circle.Parent = workspace
-end
-
-local function RemoveParryCircle()
-    if parry_circle then
-        parry_circle:Destroy()
-        parry_circle = nil
+    if not parry_circle then
+        parry_circle = Instance.new("Part")
+        parry_circle.Shape = Enum.PartType.Cylinder
+        parry_circle.Anchored = true
+        parry_circle.CanCollide = false
+        parry_circle.Transparency = 0.5
+        parry_circle.Material = Enum.Material.Neon
+        parry_circle.Color = Color3.new(1, 0, 0)
+        parry_circle.Parent = workspace
     end
+
+    parry_circle.Size = Vector3.new(0.2, auto_parry_distance * 2, auto_parry_distance * 2)
+    parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
 end
 
 local function UpdateCirclePosition()
-    while auto_parry_enabled and parry_circle do
+    while auto_parry_enabled and show_parry_circle and parry_circle do
         local player = game.Players.LocalPlayer
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
@@ -50,8 +53,6 @@ BladeBall_Section.Create_Toggle({
         auto_parry_enabled = state
         if state then
             task.spawn(UpdateCirclePosition)
-        else
-            RemoveParryCircle()
         end
     end
 })
@@ -64,6 +65,15 @@ BladeBall_Section.Create_Slider({
     default = auto_parry_distance,
     callback = function(value)
         auto_parry_distance = value
+        UpdateParryCircle()
+    end
+})
+
+BladeBall_Section.Create_Toggle({
+    name = 'Show Parry Circle',
+    flag = 'Show_Parry_Circle',
+    callback = function(state)
+        show_parry_circle = state
         UpdateParryCircle()
     end
 })
