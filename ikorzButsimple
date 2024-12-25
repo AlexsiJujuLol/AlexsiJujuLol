@@ -14,11 +14,11 @@ if not player then
     return
 end
 
--- Use a valid image asset ID for the icon (using a placeholder image)
+-- Create the UI window
 local BladeBall_Tab = Library.Add_Window('Acceptions')
-
 local BladeBall_Section = BladeBall_Tab.Create_Section()
 
+-- Auto parry settings
 local auto_parry_enabled = false
 local auto_parry_distance = 10
 local show_parry_circle = false
@@ -61,8 +61,8 @@ local function UpdateCirclePosition()
     end
 end
 
--- Auto hit the ball logic
-local function AutoHitBall()
+-- Auto parry logic: automatically parries the ball when within range
+local function AutoParryBall()
     while auto_parry_enabled do
         if not player.Character then return end
 
@@ -75,14 +75,14 @@ local function AutoHitBall()
                 if ball.Name == "Ball" and ball:IsA("Part") then
                     local distance = (ball.Position - rootPart.Position).Magnitude
                     if distance <= auto_parry_distance then
-                        -- Simulate hitting the ball with force
+                        -- Simulate a parry: applying force to the ball or triggering touch
                         local bodyVelocity = Instance.new("BodyVelocity")
-                        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)  -- Apply a strong force in all directions
-                        bodyVelocity.Velocity = (ball.Position - rootPart.Position).unit * 100  -- Hit the ball away from the player
+                        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)  -- Strong force in all directions
+                        bodyVelocity.Velocity = (ball.Position - rootPart.Position).unit * 100  -- Hit the ball away
                         bodyVelocity.Parent = ball
-                        game:GetService("Debris"):AddItem(bodyVelocity, 0.5)  -- Clean up the BodyVelocity after a short time
+                        game:GetService("Debris"):AddItem(bodyVelocity, 0.5)  -- Clean up after 0.5 seconds
                         
-                        -- Optionally, trigger a touch event if you want to simulate a touch interaction
+                        -- Optionally trigger a touch event (if ball has Touch event)
                         if ball:FindFirstChild("Touch") then
                             ball:Touch(rootPart)
                         end
@@ -94,23 +94,23 @@ local function AutoHitBall()
     end
 end
 
--- Toggle the Auto Hit Ball feature on/off
+-- Toggle the Auto Parry feature on/off
 BladeBall_Section.Create_Toggle({
-    name = 'Auto Hit Ball',
-    flag = 'Auto_Hit_Ball',
+    name = 'Auto Parry',
+    flag = 'Auto_Parry',
     callback = function(state)
         auto_parry_enabled = state
         if state then
             task.spawn(UpdateCirclePosition)  -- Start updating the circle's position
-            task.spawn(AutoHitBall)  -- Start the auto-hit ball process
+            task.spawn(AutoParryBall)  -- Start the auto parry process
         end
     end
 })
 
--- Slider to adjust the hit distance
+-- Slider to adjust the parry distance
 BladeBall_Section.Create_Slider({
-    name = 'Hit Distance',
-    flag = 'Hit_Distance',
+    name = 'Parry Distance',
+    flag = 'Parry_Distance',
     min = 5,
     max = 50,
     default = auto_parry_distance,
