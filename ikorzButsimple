@@ -59,14 +59,15 @@ local function ParryBall()
                 if ball.Name == "Ball" and ball:IsA("Part") then
                     local distance = (ball.Position - rootPart.Position).Magnitude
                     if distance <= auto_parry_distance then
-                        if ball:FindFirstChild("Touch") then
-                            ball:Touch(rootPart)
-                        end
                         local bodyVelocity = Instance.new("BodyVelocity")
                         bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
                         bodyVelocity.Velocity = (ball.Position - rootPart.Position).unit * 100
                         bodyVelocity.Parent = ball
                         game:GetService("Debris"):AddItem(bodyVelocity, 0.5)
+
+                        if ball:FindFirstChild("Touch") then
+                            ball:Touch(rootPart)
+                        end
                         break
                     end
                 end
