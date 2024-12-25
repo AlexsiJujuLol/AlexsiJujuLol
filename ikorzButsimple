@@ -37,6 +37,10 @@ local ToggleKey = Enum.KeyCode.Z -- Key to toggle Auto-Parry
 local ai_mode = "Legit" -- Default AI mode: Legit
 local auto_spam_enabled = false -- Toggle for Auto Spam
 
+-- Prince Ball and Sword Variables
+local sword = nil
+local prince_ball = nil
+
 -- Function to calculate curve direction
 local function GetCurveVelocity(original_velocity)
     local curve_vector = Vector3.zero
@@ -130,6 +134,30 @@ local function ActivateRedCircle()
     print("Red Circle Auto-Block Activated!")
 end
 
+-- Function to spawn Prince Ball (and give sword)
+local function SpawnPrinceBall()
+    -- Spawn a Prince Ball
+    prince_ball = Instance.new("Part")
+    prince_ball.Name = "PrinceBall"
+    prince_ball.Shape = Enum.PartType.Ball
+    prince_ball.Size = Vector3.new(2, 2, 2)
+    prince_ball.Position = player.Character.HumanoidRootPart.Position + Vector3.new(5, 0, 0) -- Offset from player
+    prince_ball.Color = Color3.fromRGB(255, 215, 0) -- Golden color (or any desired color)
+    prince_ball.Anchored = true
+    prince_ball.Parent = workspace
+
+    -- Create sword
+    sword = Instance.new("Part")
+    sword.Name = "Sword"
+    sword.Size = Vector3.new(1, 5, 1)
+    sword.Position = player.Character.HumanoidRootPart.Position + Vector3.new(2, 5, 0) -- Offset from player
+    sword.Color = Color3.fromRGB(0, 0, 255) -- Blue sword color
+    sword.Anchored = true
+    sword.Parent = workspace
+
+    print("Prince Ball and Sword Spawned!")
+end
+
 -- Toggle to enable/disable auto-parry
 local function ToggleAutoParry(state)
     auto_parry_enabled = state
@@ -217,7 +245,15 @@ BladeBall_Section.Create_Toggle({
     end
 })
 
+-- Button to spawn Prince Ball and Sword
+BladeBall_Section.Create_Button({
+    name = "Spawn Prince Ball & Sword",
+    callback = function()
+        SpawnPrinceBall()
+    end
+})
+
 -- Show UI
 Library_Window:Show()
 
-print("Auto-Parry with Curve, AI Play Modes, and Auto-Spam Script Loaded!")
+print("Auto-Parry with Curve, AI Play Modes, Auto-Spam, Prince Ball, and Sword Script Loaded!")
