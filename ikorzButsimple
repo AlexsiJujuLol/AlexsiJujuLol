@@ -18,18 +18,41 @@ end
 
 local Library_Window = Library.Add_Window('Auto Parry & Clicker Settings')
 
--- Variables for Auto-Parry and Auto-Click
+-- Variables
 local auto_parry_enabled = false
 local auto_click_enabled = false
 local auto_parry_distance = 10
 local parry_delay = 0.1
 local click_distance = 5
 local click_interval = 0.1
+local curve_direction = "Back" -- Default curve direction
+local curve_force = 50 -- Force applied for the curve effect
 local show_parry_circle = false
 local parry_circle = nil
 local last_parry_time = 0
 local last_click_time = 0
 local ToggleKey = Enum.KeyCode.Z -- Key to toggle Auto-Parry
+
+-- AI Play Modes
+local ai_mode = "Legit" -- Default AI mode: Legit
+local auto_spam_enabled = false -- Toggle for Auto Spam
+
+-- Function to calculate curve direction
+local function GetCurveVelocity(original_velocity)
+    local curve_vector = Vector3.zero
+
+    if curve_direction == "Back" then
+        curve_vector = Vector3.new(0, 0, -curve_force)
+    elseif curve_direction == "Right" then
+        curve_vector = Vector3.new(curve_force, 0, 0)
+    elseif curve_direction == "Left" then
+        curve_vector = Vector3.new(-curve_force, 0, 0)
+    elseif curve_direction == "Up" then
+        curve_vector = Vector3.new(0, curve_force, 0)
+    end
+
+    return original_velocity + curve_vector
+end
 
 -- Function to update the parry circle's position and size
 local function UpdateParryCircle()
@@ -58,7 +81,7 @@ local function UpdateParryCircle()
     parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
 end
 
--- Function to automatically parry balls
+-- Function to automatically parry balls with curve
 local function AutoParryBall()
     while auto_parry_enabled do
         if not player.Character then break end
@@ -83,47 +106,28 @@ local function AutoParryBall()
                 end
             end
 
-            -- If a ball is within range, apply the parry logic
+            -- If a ball is within range, apply the parry with curve logic
             if nearby_ball then
+                local original_velocity = (nearby_ball.Position - rootPart.Position).unit * 100
+                local curved_velocity = GetCurveVelocity(original_velocity)
+
                 local bodyVelocity = Instance.new("BodyVelocity")
                 bodyVelocity.MaxForce = Vector3.new(1e4, 1e4, 1e4)
-                bodyVelocity.Velocity = (nearby_ball.Position - rootPart.Position).unit * 100
+                bodyVelocity.Velocity = curved_velocity
                 bodyVelocity.Parent = nearby_ball
                 Debris:AddItem(bodyVelocity, 0.5) -- Clean up after parry
-                print("Parried a ball!")
+                print("Parried a ball with a curve!")
             end
         end
         task.wait(0.05)
     end
 end
 
--- Function to automatically click when near a player
-local function AutoClickNearby()
-    while auto_click_enabled do
-        if not player.Character then break end
-
-        local character = player.Character
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-
-        if rootPart and tick() - last_click_time > click_interval then
-            last_click_time = tick()
-
-            -- Find the nearest player or NPC within range
-            for _, target in pairs(workspace:GetChildren()) do
-                if target:IsA("Model") and target ~= character and target:FindFirstChild("HumanoidRootPart") then
-                    local distance = (target.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                    if distance <= click_distance then
-                        -- Simulate a click
-                        game:GetService("VirtualUser"):CaptureController()
-                        game:GetService("VirtualUser"):ClickButton1()
-                        print("Auto-clicked on target!")
-                        break
-                    end
-                end
-            end
-        end
-        task.wait(0.05)
-    end
+-- Function to execute Red Circle Auto-Block
+local function ActivateRedCircle()
+    getgenv().visualizer = true
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/RedCircleBlock"))()
+    print("Red Circle Auto-Block Activated!")
 end
 
 -- Toggle to enable/disable auto-parry
@@ -131,23 +135,27 @@ local function ToggleAutoParry(state)
     auto_parry_enabled = state
     if state then
         task.spawn(AutoParryBall)
-        -- Execute Red Circle Auto-Block
-        getgenv().visualizer = true
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/RedCircleBlock"))()
-        print("Auto-Parry and Red Circle Auto-Block Activated!")
+        ActivateRedCircle()
+        print("Auto-Parry and Red Circle Activated!")
     else
-        print("Auto-Parry and Red Circle Auto-Block Disabled!")
+        print("Auto-Parry Disabled!")
     end
 end
 
--- Toggle to enable/disable auto-click
-local function ToggleAutoClick(state)
-    auto_click_enabled = state
+-- Toggle AI Play Mode (Legit/Blatant)
+local function SetAIPlayMode(mode)
+    ai_mode = mode
+    print("AI Play Mode set to: " .. ai_mode)
+end
+
+-- Toggle for Auto Spam
+local function ToggleAutoSpam(state)
+    auto_spam_enabled = state
     if state then
-        task.spawn(AutoClickNearby)
-        print("Auto-Click Enabled!")
+        print("Auto-Spam Enabled!")
+        -- You can add the code for the actual spamming logic here (e.g., parry, click, etc.)
     else
-        print("Auto-Click Disabled!")
+        print("Auto-Spam Disabled!")
     end
 end
 
@@ -164,39 +172,52 @@ BladeBall_Section.Create_Toggle({
     end
 })
 
--- Toggle for Auto-Click
+-- Dropdown to select curve direction
+BladeBall_Section.Create_Dropdown({
+    name = 'Curve Direction',
+    flag = 'Curve_Direction',
+    options = {'Back', 'Right', 'Left', 'Up'},
+    default = curve_direction,
+    callback = function(value)
+        curve_direction = value
+        print("Curve Direction set to:", curve_direction)
+    end
+})
+
+-- Slider for Curve Force
+BladeBall_Section.Create_Slider({
+    name = 'Curve Force',
+    flag = 'Curve_Force',
+    min = 10,
+    max = 100,
+    default = curve_force,
+    callback = function(value)
+        curve_force = value
+        print("Curve Force set to:", curve_force)
+    end
+})
+
+-- Dropdown for AI Play Mode
+BladeBall_Section.Create_Dropdown({
+    name = 'AI Play Mode',
+    flag = 'AI_Play_Mode',
+    options = {'Legit', 'Blatant'},
+    default = ai_mode,
+    callback = function(value)
+        SetAIPlayMode(value)
+    end
+})
+
+-- Toggle for Auto-Spam
 BladeBall_Section.Create_Toggle({
-    name = 'Enable Auto-Click',
-    flag = 'Enable_Auto_Click',
+    name = 'Enable Auto-Spam',
+    flag = 'Enable_Auto_Spam',
     callback = function(state)
-        ToggleAutoClick(state)
+        ToggleAutoSpam(state)
     end
 })
 
--- Slider for Click Distance
-BladeBall_Section.Create_Slider({
-    name = 'Click Distance',
-    flag = 'Click_Distance',
-    min = 2,
-    max = 10,
-    default = click_distance,
-    callback = function(value)
-        click_distance = value
-    end
-})
-
--- Slider for Click Interval
-BladeBall_Section.Create_Slider({
-    name = 'Click Interval',
-    flag = 'Click_Interval',
-    min = 0.05,
-    max = 1,
-    default = click_interval,
-    callback = function(value)
-        click_interval = value
-    end
-})
-
+-- Show UI
 Library_Window:Show()
 
-print("Auto-Parry and Auto-Clicker Script Loaded!")
+print("Auto-Parry with Curve, AI Play Modes, and Auto-Spam Script Loaded!")
