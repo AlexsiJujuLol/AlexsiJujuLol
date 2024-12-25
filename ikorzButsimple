@@ -1,0 +1,69 @@
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
+local Library_Window = Library.Add_Window('Acceptions')
+
+local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
+local BladeBall_Section = BladeBall_Tab.Create_Section()
+
+local auto_parry_enabled = false
+local auto_parry_distance = 10
+local parry_circle = nil
+
+local function UpdateParryCircle()
+    if parry_circle then parry_circle:Destroy() end
+
+    local player = game.Players.LocalPlayer
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+
+    parry_circle = Instance.new("Part")
+    parry_circle.Shape = Enum.PartType.Cylinder
+    parry_circle.Size = Vector3.new(0.2, auto_parry_distance * 2, auto_parry_distance * 2)
+    parry_circle.Anchored = true
+    parry_circle.CanCollide = false
+    parry_circle.Transparency = 0.5
+    parry_circle.Material = Enum.Material.Neon
+    parry_circle.Color = Color3.new(1, 0, 0)
+    parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
+    parry_circle.Parent = workspace
+end
+
+local function RemoveParryCircle()
+    if parry_circle then
+        parry_circle:Destroy()
+        parry_circle = nil
+    end
+end
+
+local function UpdateCirclePosition()
+    while auto_parry_enabled and parry_circle do
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
+        end
+        task.wait(0.05)
+    end
+end
+
+BladeBall_Section.Create_Toggle({
+    name = 'Auto Parry',
+    flag = 'Auto_Parry',
+    callback = function(state)
+        auto_parry_enabled = state
+        if state then
+            task.spawn(UpdateCirclePosition)
+        else
+            RemoveParryCircle()
+        end
+    end
+})
+
+BladeBall_Section.Create_Slider({
+    name = 'Parry Distance',
+    flag = 'Parry_Distance',
+    min = 5,
+    max = 50,
+    default = auto_parry_distance,
+    callback = function(value)
+        auto_parry_distance = value
+        UpdateParryCircle()
+    end
+})
