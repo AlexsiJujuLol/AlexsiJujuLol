@@ -110,15 +110,9 @@ local function ToggleAutoParry(state)
         task.spawn(AutoParryBall)
         
         -- Activate Auto-Block with Red Circle (external script)
-        local success, result = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/Circle"))()
-        end)
-        
-        if success then
-            print("Auto-Parry and Auto-Block Activated!")
-        else
-            warn("Failed to activate Auto-Block: " .. result)
-        end
+        getgenv().visualizer = true
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/RedCircleBlock"))()
+        print("Auto-Parry and Auto-Block Activated!")
     else
         if parry_circle then
             parry_circle:Destroy()  -- Remove parry circle when disabled
