@@ -50,7 +50,7 @@ local function UpdateCirclePosition()
     end
 end
 
--- Ball Parrying logic
+-- Ball Parrying logic with automatic parrying mechanism
 local function ParryBall()
     while auto_parry_enabled do
         if not game.Players.LocalPlayer.Character then return end
@@ -62,14 +62,17 @@ local function ParryBall()
         if rootPart then
             -- Check for nearby balls
             for _, ball in pairs(workspace:GetChildren()) do
+                -- Identify ball objects (you can change this condition based on your game)
                 if ball.Name == "Ball" and ball:IsA("Part") then
                     local distance = (ball.Position - rootPart.Position).Magnitude
                     if distance <= auto_parry_distance then
-                        -- If within distance, simulate a parry by interacting with the ball
-                        -- You can change this behavior to match your specific game mechanics
+                        -- Simulate a parry by triggering interactions with the ball
+                        -- You can customize this further depending on your game mechanics
                         if ball:FindFirstChild("Touch") then
-                            ball:Touch(rootPart)  -- Trigger a touch event (if applicable)
+                            -- Trigger the touch event when near the ball
+                            ball:Touch(rootPart)
                         end
+                        -- Add additional interactions if needed (e.g., forces or animations)
                         break
                     end
                 end
