@@ -9,7 +9,6 @@ local auto_parry_distance = 10
 local show_parry_circle = false
 local parry_circle = nil
 
--- Update the parry circle's position and size
 local function UpdateParryCircle()
     if not show_parry_circle then
         if parry_circle then
@@ -22,7 +21,6 @@ local function UpdateParryCircle()
     local player = game.Players.LocalPlayer
     if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
 
-    -- Create or update the circle
     if not parry_circle then
         parry_circle = Instance.new("Part")
         parry_circle.Shape = Enum.PartType.Cylinder
@@ -34,12 +32,10 @@ local function UpdateParryCircle()
         parry_circle.Parent = workspace
     end
 
-    -- Adjust the size of the circle based on the set parry distance
     parry_circle.Size = Vector3.new(0.2, auto_parry_distance * 2, auto_parry_distance * 2)
     parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
 end
 
--- Continuously update the parry circle's position as the player moves
 local function UpdateCirclePosition()
     while auto_parry_enabled and show_parry_circle and parry_circle do
         local player = game.Players.LocalPlayer
@@ -50,7 +46,6 @@ local function UpdateCirclePosition()
     end
 end
 
--- Ball Parrying logic with automatic parrying mechanism
 local function ParryBall()
     while auto_parry_enabled do
         if not game.Players.LocalPlayer.Character then return end
@@ -60,42 +55,39 @@ local function ParryBall()
         local rootPart = character:FindFirstChild("HumanoidRootPart")
 
         if rootPart then
-            -- Check for nearby balls
             for _, ball in pairs(workspace:GetChildren()) do
-                -- Identify ball objects (you can change this condition based on your game)
                 if ball.Name == "Ball" and ball:IsA("Part") then
                     local distance = (ball.Position - rootPart.Position).Magnitude
                     if distance <= auto_parry_distance then
-                        -- Simulate a parry by triggering interactions with the ball
-                        -- You can customize this further depending on your game mechanics
                         if ball:FindFirstChild("Touch") then
-                            -- Trigger the touch event when near the ball
                             ball:Touch(rootPart)
                         end
-                        -- Add additional interactions if needed (e.g., forces or animations)
+                        local bodyVelocity = Instance.new("BodyVelocity")
+                        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
+                        bodyVelocity.Velocity = (ball.Position - rootPart.Position).unit * 100
+                        bodyVelocity.Parent = ball
+                        game:GetService("Debris"):AddItem(bodyVelocity, 0.5)
                         break
                     end
                 end
             end
         end
-        task.wait(0.1)  -- Wait a short time before checking again
+        task.wait(0.1)
     end
 end
 
--- Toggle the Auto Parry feature on/off
 BladeBall_Section.Create_Toggle({
     name = 'Auto Parry',
     flag = 'Auto_Parry',
     callback = function(state)
         auto_parry_enabled = state
         if state then
-            task.spawn(UpdateCirclePosition)  -- Start updating circle position
-            task.spawn(ParryBall)  -- Start the ball parrying process
+            task.spawn(UpdateCirclePosition)
+            task.spawn(ParryBall)
         end
     end
 })
 
--- Slider to adjust parry distance
 BladeBall_Section.Create_Slider({
     name = 'Parry Distance',
     flag = 'Parry_Distance',
@@ -104,16 +96,15 @@ BladeBall_Section.Create_Slider({
     default = auto_parry_distance,
     callback = function(value)
         auto_parry_distance = value
-        UpdateParryCircle()  -- Update the circle whenever the distance changes
+        UpdateParryCircle()
     end
 })
 
--- Toggle to show or hide the parry circle
 BladeBall_Section.Create_Toggle({
     name = 'Show Parry Circle',
     flag = 'Show_Parry_Circle',
     callback = function(state)
         show_parry_circle = state
-        UpdateParryCircle()  -- Update the circle's visibility
+        UpdateParryCircle()
     end
 })
