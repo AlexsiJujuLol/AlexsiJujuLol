@@ -1,46 +1,31 @@
---[[
-    WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
-]]
--- Removes Anti-Cheat, Thanks Devs For Making This Easy.
+-- Load necessary services
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
 
-print("Bypassing Security Checks..")
-
-game:GetService("ReplicatedStorage").Security.RemoteEvent:Destroy()
-game:GetService("ReplicatedStorage").Security[""]:Destroy()
-game:GetService("ReplicatedStorage").Security:Destroy()
-game:GetService("Players").LocalPlayer.PlayerScripts.Client.DeviceChecker:Destroy()
-
--- Load the UI Library
-local Library
-local success, err = pcall(function()
-    Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
+-- Load the Cloud UI Library (with error handling)
+local success, Library = pcall(function()
+    return loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 end)
 
 if not success then
-    warn("Failed to load Library: " .. err)
-    return
+    warn("Failed to load Cloud UI Library: " .. Library)
+    return  -- Exit the script if the library failed to load
 end
 
-local player = game.Players.LocalPlayer
-if not player then
-    warn("This script must be run as a LocalScript.")
-    return
-end
-
--- Add the main window
-local Library_Window = Library.Add_Window('Acceptions')
-
--- Add BladeBall tab to the window
-local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
-local BladeBall_Section = BladeBall_Tab.Create_Section()
+local Library_Window = Library.Add_Window('Auto Parry Settings')
 
 -- Variables for Auto Parry
 local auto_parry_enabled = false
 local auto_parry_distance = 10
 local show_parry_circle = false
 local parry_circle = nil
+local last_parry_time = 0
+local parry_cooldown = 0.1  -- Cooldown between parries to avoid too many actions
 
--- Update the parry circle's position and size
+-- Function to update the parry circle's position and size
 local function UpdateParryCircle()
     if not show_parry_circle then
         if parry_circle then
@@ -67,17 +52,17 @@ local function UpdateParryCircle()
     parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
 end
 
--- Continuously update the parry circle's position as the player moves
+-- Function to continuously update the parry circle's position
 local function UpdateCirclePosition()
-    while auto_parry_enabled and show_parry_circle and parry_circle do
+    while auto_parry_enabled and show_parry_circle do
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
+            parry_circle.Position = player.Character.HumanoidRootPart.Position
         end
         task.wait(0.05)
     end
 end
 
--- Auto Parry Ball logic
+-- Function to automatically parry balls with enhanced performance
 local function AutoParryBall()
     while auto_parry_enabled do
         if not player.Character then return end
@@ -85,52 +70,81 @@ local function AutoParryBall()
         local character = player.Character
         local rootPart = character:FindFirstChild("HumanoidRootPart")
 
-        if rootPart then
+        if rootPart and tick() - last_parry_time > parry_cooldown then
+            last_parry_time = tick()  -- Update last parry time
+
+            local nearby_ball = nil
+            local min_distance = auto_parry_distance
+
+            -- Find the nearest ball within range
             for _, ball in pairs(workspace:GetChildren()) do
                 if ball.Name == "Ball" and ball:IsA("Part") then
                     local distance = (ball.Position - rootPart.Position).Magnitude
-                    if distance <= auto_parry_distance then
-                        local bodyVelocity = Instance.new("BodyVelocity")
-                        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
-                        bodyVelocity.Velocity = (ball.Position - rootPart.Position).unit * 100
-                        bodyVelocity.Parent = ball
-                        game:GetService("Debris"):AddItem(bodyVelocity, 0.5)
-
-                        if ball:FindFirstChild("Touch") then
-                            ball:Touch(rootPart)
-                        end
+                    if distance <= min_distance then
+                        nearby_ball = ball
+                        min_distance = distance
                     end
                 end
             end
+
+            -- If a ball is within range, apply the parry logic
+            if nearby_ball then
+                local bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
+                bodyVelocity.Velocity = (nearby_ball.Position - rootPart.Position).unit * 100
+                bodyVelocity.Parent = nearby_ball
+                Debris:AddItem(bodyVelocity, 0.5)  -- Clean up after parry
+                print("Parried a ball!")
+            end
         end
-        task.wait(0.1)
+        task.wait(0.05)  -- Lower frequency of checks for performance
     end
 end
 
--- Create the Auto Parry tab and add options to it
-local AutoParry_Tab = Library.Add_Window('Auto Parry')
-local AutoParry_Section = AutoParry_Tab.Create_Section()
-
--- Toggle Auto Parry and start/stop the process
-AutoParry_Section.Create_Toggle({
-    name = 'Enable Auto Parry (Hit Ball)',
-    flag = 'Auto_Parry_Hit',
-    callback = function(state)
-        auto_parry_enabled = state
-        if state then
-            task.spawn(UpdateCirclePosition)  -- Start updating circle position
-            task.spawn(AutoParryBall)  -- Start the ball parrying process
+-- Function to toggle auto parry and activate the external auto-block script
+local function ToggleAutoParry(state)
+    auto_parry_enabled = state
+    if state then
+        -- Start updating circle position and parrying balls
+        task.spawn(UpdateCirclePosition)
+        task.spawn(AutoParryBall)
+        
+        -- Activate Auto-Block with Red Circle (external script)
+        local success, result = pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/Circle"))()
+        end)
+        
+        if success then
+            print("Auto-Parry and Auto-Block Activated!")
         else
-            if parry_circle then
-                parry_circle:Destroy()  -- Remove parry circle when disabled
-                parry_circle = nil
-            end
+            warn("Failed to activate Auto-Block: " .. result)
         end
+    else
+        if parry_circle then
+            parry_circle:Destroy()  -- Remove parry circle when disabled
+            parry_circle = nil
+        end
+        print("Auto-Parry and Auto-Block Disabled!")
+    end
+end
+
+-- Cloud UI Tab Creation
+local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
+
+-- Section for Auto Parry Settings
+local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Parry Settings'})
+
+-- Toggle for Auto Parry
+BladeBall_Section.Create_Toggle({
+    name = 'Enable Auto Parry',
+    flag = 'Auto_Parry',
+    callback = function(state)
+        ToggleAutoParry(state)
     end
 })
 
--- Slider to adjust the parry distance
-AutoParry_Section.Create_Slider({
+-- Slider to adjust parry distance
+BladeBall_Section.Create_Slider({
     name = 'Parry Distance',
     flag = 'Parry_Distance',
     min = 5,
@@ -143,7 +157,7 @@ AutoParry_Section.Create_Slider({
 })
 
 -- Toggle to show or hide the parry circle
-AutoParry_Section.Create_Toggle({
+BladeBall_Section.Create_Toggle({
     name = 'Show Parry Circle',
     flag = 'Show_Parry_Circle',
     callback = function(state)
@@ -151,3 +165,8 @@ AutoParry_Section.Create_Toggle({
         UpdateParryCircle()  -- Update the circle's visibility
     end
 })
+
+-- Finalize the UI setup
+Library_Window:Show()
+
+print("Auto Parry UI Loaded! Press the button to toggle.")
