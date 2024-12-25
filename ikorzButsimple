@@ -5,22 +5,24 @@ local player = Players.LocalPlayer
 local workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
 
--- Load the Cloud UI Library (with error handling)
+-- Load the Cloud UI Library
 local success, Library = pcall(function()
     return loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 end)
 
 if not success then
     warn("Failed to load Cloud UI Library: " .. Library)
-    return  -- Exit the script if the library failed to load
+    return
 end
 
-local Library_Window = Library.Add_Window('Auto Parry Settings')
+local Library_Window = Library.Add_Window('Auto Parry & Spam Settings')
 
--- Variables for Auto Parry
+-- Variables for Auto Parry and Spam
 local auto_parry_enabled = false
+local auto_spam_enabled = false
 local auto_parry_distance = 10
-local parry_delay = 0.1  -- Default delay between parries
+local parry_delay = 0.1
+local spam_interval = 0.1
 local show_parry_circle = false
 local parry_circle = nil
 local last_parry_time = 0
@@ -62,16 +64,16 @@ local function UpdateCirclePosition()
     end
 end
 
--- Function to automatically parry balls with enhanced performance
+-- Function to automatically parry balls
 local function AutoParryBall()
     while auto_parry_enabled do
-        if not player.Character then return end
+        if not player.Character then break end
 
         local character = player.Character
         local rootPart = character:FindFirstChild("HumanoidRootPart")
 
         if rootPart and tick() - last_parry_time > parry_delay then
-            last_parry_time = tick()  -- Update last parry time
+            last_parry_time = tick()
 
             local nearby_ball = nil
             local min_distance = auto_parry_distance
@@ -90,43 +92,80 @@ local function AutoParryBall()
             -- If a ball is within range, apply the parry logic
             if nearby_ball then
                 local bodyVelocity = Instance.new("BodyVelocity")
-                bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
+                bodyVelocity.MaxForce = Vector3.new(1e4, 1e4, 1e4)
                 bodyVelocity.Velocity = (nearby_ball.Position - rootPart.Position).unit * 100
                 bodyVelocity.Parent = nearby_ball
-                Debris:AddItem(bodyVelocity, 0.5)  -- Clean up after parry
+                Debris:AddItem(bodyVelocity, 0.5) -- Clean up after parry
                 print("Parried a ball!")
             end
         end
-        task.wait(0.05)  -- Lower frequency of checks for performance
+        task.wait(0.05)
     end
 end
 
--- Function to toggle auto parry and activate the external auto-block script
+-- Function to auto spam when near a ball
+local function AutoSpamBall()
+    while auto_spam_enabled do
+        if not player.Character then break end
+
+        local character = player.Character
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+        if rootPart then
+            local nearby_ball = nil
+            local min_distance = auto_parry_distance
+
+            -- Find the nearest ball within range
+            for _, ball in pairs(workspace:GetChildren()) do
+                if ball.Name == "Ball" and ball:IsA("Part") then
+                    local distance = (ball.Position - rootPart.Position).Magnitude
+                    if distance <= min_distance then
+                        nearby_ball = ball
+                        break -- Stop after finding the first valid ball
+                    end
+                end
+            end
+
+            -- Perform spam action if a ball is nearby
+            if nearby_ball then
+                print("Spamming near ball!") -- Replace this with your spam action
+            end
+        end
+
+        task.wait(spam_interval) -- Control spam frequency
+    end
+end
+
+-- Toggle to enable/disable auto-parry
 local function ToggleAutoParry(state)
     auto_parry_enabled = state
     if state then
-        -- Start updating circle position and parrying balls
         task.spawn(UpdateCirclePosition)
         task.spawn(AutoParryBall)
-        
-        -- Activate Auto-Block with Red Circle (external script)
-        getgenv().visualizer = true
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/RedCircleBlock"))()
-        print("Auto-Parry and Auto-Block Activated!")
+        print("Auto-Parry Enabled!")
     else
         if parry_circle then
-            parry_circle:Destroy()  -- Remove parry circle when disabled
+            parry_circle:Destroy()
             parry_circle = nil
         end
-        print("Auto-Parry and Auto-Block Disabled!")
+        print("Auto-Parry Disabled!")
     end
 end
 
--- Cloud UI Tab Creation
-local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
+-- Toggle to enable/disable auto-spam
+local function ToggleAutoSpam(state)
+    auto_spam_enabled = state
+    if state then
+        task.spawn(AutoSpamBall)
+        print("Auto-Spam Enabled!")
+    else
+        print("Auto-Spam Disabled!")
+    end
+end
 
--- Section for Auto Parry Settings
-local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Parry Settings'})
+-- UI Setup
+local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
+local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Parry & Spam Settings'})
 
 -- Toggle for Auto Parry
 BladeBall_Section.Create_Toggle({
@@ -134,6 +173,15 @@ BladeBall_Section.Create_Toggle({
     flag = 'Auto_Parry',
     callback = function(state)
         ToggleAutoParry(state)
+    end
+})
+
+-- Toggle for Auto Spam
+BladeBall_Section.Create_Toggle({
+    name = 'Enable Auto Spam',
+    flag = 'Auto_Spam',
+    callback = function(state)
+        ToggleAutoSpam(state)
     end
 })
 
@@ -146,7 +194,7 @@ BladeBall_Section.Create_Slider({
     default = auto_parry_distance,
     callback = function(value)
         auto_parry_distance = value
-        UpdateParryCircle()  -- Update the circle whenever the distance changes
+        UpdateParryCircle()
     end
 })
 
@@ -159,7 +207,18 @@ BladeBall_Section.Create_Slider({
     default = parry_delay,
     callback = function(value)
         parry_delay = value
-        print("Parry delay set to: " .. parry_delay .. " seconds")
+    end
+})
+
+-- Slider to adjust spam interval
+BladeBall_Section.Create_Slider({
+    name = 'Spam Interval (Seconds)',
+    flag = 'Spam_Interval',
+    min = 0.05,
+    max = 1,
+    default = spam_interval,
+    callback = function(value)
+        spam_interval = value
     end
 })
 
@@ -169,11 +228,10 @@ BladeBall_Section.Create_Toggle({
     flag = 'Show_Parry_Circle',
     callback = function(state)
         show_parry_circle = state
-        UpdateParryCircle()  -- Update the circle's visibility
+        UpdateParryCircle()
     end
 })
 
--- Finalize the UI setup
 Library_Window:Show()
 
-print("Auto Parry UI Loaded! Press the button to toggle.")
+print("Auto Parry & Spam Script Loaded!")
