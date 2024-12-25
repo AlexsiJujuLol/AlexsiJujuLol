@@ -9,6 +9,7 @@ local auto_parry_distance = 10
 local show_parry_circle = false
 local parry_circle = nil
 
+-- Update the parry circle's position and size
 local function UpdateParryCircle()
     if not show_parry_circle then
         if parry_circle then
@@ -36,6 +37,7 @@ local function UpdateParryCircle()
     parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
 end
 
+-- Continuously update the parry circle's position as the player moves
 local function UpdateCirclePosition()
     while auto_parry_enabled and show_parry_circle and parry_circle do
         local player = game.Players.LocalPlayer
@@ -46,7 +48,8 @@ local function UpdateCirclePosition()
     end
 end
 
-local function ParryBall()
+-- Auto hit the ball logic
+local function AutoHitBall()
     while auto_parry_enabled do
         if not game.Players.LocalPlayer.Character then return end
 
@@ -55,20 +58,22 @@ local function ParryBall()
         local rootPart = character:FindFirstChild("HumanoidRootPart")
 
         if rootPart then
+            -- Look for nearby balls in the workspace
             for _, ball in pairs(workspace:GetChildren()) do
                 if ball.Name == "Ball" and ball:IsA("Part") then
                     local distance = (ball.Position - rootPart.Position).Magnitude
                     if distance <= auto_parry_distance then
+                        -- Simulate hitting the ball with force
                         local bodyVelocity = Instance.new("BodyVelocity")
-                        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
-                        bodyVelocity.Velocity = (ball.Position - rootPart.Position).unit * 100
+                        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)  -- Apply a strong force in all directions
+                        bodyVelocity.Velocity = (ball.Position - rootPart.Position).unit * 100  -- Hit the ball away from the player
                         bodyVelocity.Parent = ball
-                        game:GetService("Debris"):AddItem(bodyVelocity, 0.5)
-
+                        game:GetService("Debris"):AddItem(bodyVelocity, 0.5)  -- Clean up the BodyVelocity after a short time
+                        
+                        -- Optionally, trigger a touch event if you want to simulate a touch interaction
                         if ball:FindFirstChild("Touch") then
                             ball:Touch(rootPart)
                         end
-                        break
                     end
                 end
             end
@@ -77,35 +82,38 @@ local function ParryBall()
     end
 end
 
+-- Toggle the Auto Parry feature on/off
 BladeBall_Section.Create_Toggle({
-    name = 'Auto Parry',
-    flag = 'Auto_Parry',
+    name = 'Auto Hit Ball',
+    flag = 'Auto_Hit_Ball',
     callback = function(state)
         auto_parry_enabled = state
         if state then
-            task.spawn(UpdateCirclePosition)
-            task.spawn(ParryBall)
+            task.spawn(UpdateCirclePosition)  -- Start updating the circle's position
+            task.spawn(AutoHitBall)  -- Start the auto-hit ball process
         end
     end
 })
 
+-- Slider to adjust the hit distance
 BladeBall_Section.Create_Slider({
-    name = 'Parry Distance',
-    flag = 'Parry_Distance',
+    name = 'Hit Distance',
+    flag = 'Hit_Distance',
     min = 5,
     max = 50,
     default = auto_parry_distance,
     callback = function(value)
         auto_parry_distance = value
-        UpdateParryCircle()
+        UpdateParryCircle()  -- Update the circle whenever the distance changes
     end
 })
 
+-- Toggle to show or hide the parry circle
 BladeBall_Section.Create_Toggle({
     name = 'Show Parry Circle',
     flag = 'Show_Parry_Circle',
     callback = function(state)
         show_parry_circle = state
-        UpdateParryCircle()
+        UpdateParryCircle()  -- Update the circle's visibility
     end
 })
