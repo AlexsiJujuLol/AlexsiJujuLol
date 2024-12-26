@@ -27,7 +27,7 @@ local click_distance = 5
 local click_interval = 0.1
 local curve_direction = "Back" -- Default curve direction
 local curve_force = 50 -- Force applied for the curve effect
-local show_parry_circle = false
+local show_parry_circle = false -- Flag to show or hide the parry circle
 local parry_circle = nil
 local last_parry_time = 0
 local last_click_time = 0
@@ -77,7 +77,7 @@ local function UpdateParryCircle()
         parry_circle.CanCollide = false
         parry_circle.Transparency = 0.5
         parry_circle.Material = Enum.Material.Neon
-        parry_circle.Color = Color3.new(1, 0, 0)
+        parry_circle.Color = Color3.new(0, 0, 0) -- Set the color to black
         parry_circle.Parent = workspace
     end
 
@@ -245,6 +245,16 @@ BladeBall_Section.Create_Toggle({
     end
 })
 
+-- Toggle for Visual Parry Circle
+BladeBall_Section.Create_Toggle({
+    name = 'Enable Visual Parry Circle',
+    flag = 'Enable_Visual_Parry_Circle',
+    callback = function(state)
+        show_parry_circle = state
+        UpdateParryCircle()  -- Update the visual circle based on the toggle
+    end
+})
+
 -- Button to spawn Prince Ball and Sword
 BladeBall_Section.Create_Button({
     name = "Spawn Prince Ball & Sword",
@@ -256,4 +266,4 @@ BladeBall_Section.Create_Button({
 -- Show UI
 Library_Window:Show()
 
-print("Auto-Parry with Curve, AI Play Modes, Auto-Spam, Prince Ball, and Sword Script Loaded!")
+print("Auto-Parry with Curve, AI Play Modes, Auto-Spam, Prince Ball, Sword, and Visual Parry Circle Script Loaded!")
