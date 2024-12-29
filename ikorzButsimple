@@ -5,6 +5,12 @@ local Debris = game:GetService("Debris")
 local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 
+-- Configuration settings (hit_time and mode)
+getgenv().config = getgenv().config or {
+    hit_time = 0.37, -- Recommended: 0.25 to 0.75 seconds
+    mode = 'Always', -- Options: 'Hold', 'Toggle', 'Always'
+}
+
 -- UI and settings
 local success, Library = pcall(function()
     return loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
@@ -91,16 +97,46 @@ workspace.Balls.ChildAdded:Connect(function()
 end)
 
 RunService.Heartbeat:Connect(function() -- Main auto parry loop
+    -- If auto-parry is not enabled, or if the ball is not targeting the player, or a parry has already occurred, exit the loop
     if not getgenv().Auto_Parry or not Ball_Properties.Ball or Ball_Properties.Target ~= Player.Name or Logic_Properties.Parried then
         return
     end
 
-    if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
-        Logic_Properties.Parried = true
-        Logic_Properties.Cooldown = tick()
+    -- Parry based on `mode`
+    if getgenv().config.mode == 'Always' then
+        -- Always attempt to parry
+        if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
+            Logic_Properties.Parried = true
+            Logic_Properties.Cooldown = tick()
 
-        if Logic_Properties.Parried and (tick() - Logic_Properties.Cooldown) >= 1 then
+            -- Reset parry after hit_time
+            if Logic_Properties.Parried and (tick() - Logic_Properties.Cooldown) >= getgenv().config.hit_time then
+                Logic_Properties.Parried = false
+            end
+        end
+    elseif getgenv().config.mode == 'Hold' then
+        -- Hold mode: parry as long as the user is holding a specific key (e.g., "E")
+        if UserInputService:IsKeyDown(Enum.KeyCode.E) then
+            if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
+                Logic_Properties.Parried = true
+                Logic_Properties.Cooldown = tick()
+            end
+        else
+            Logic_Properties.Parried = false
+        end
+    elseif getgenv().config.mode == 'Toggle' then
+        -- Toggle mode: toggle parry on and off when a specific key (e.g., "T") is pressed
+        if UserInputService:IsKeyDown(Enum.KeyCode.T) then
+            if not Logic_Properties.Parried then
+                if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
+                    Logic_Properties.Parried = true
+                    Logic_Properties.Cooldown = tick()
+                end
+            end
+        else
             Logic_Properties.Parried = false
         end
     end
