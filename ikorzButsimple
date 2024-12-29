@@ -1,5 +1,5 @@
 -- Set this to true if you want debug output.
-local Debug = false 
+local Debug = false
 
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -35,7 +35,6 @@ local function print(...)
 end
 
 -- Functions
-
 local function VerifyBall(Ball)
     -- Returns true if it's a valid projectile ball.
     if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
