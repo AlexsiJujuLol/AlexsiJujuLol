@@ -178,3 +178,28 @@ RunService.Heartbeat:Connect(function()
         end
     end
 end)
+
+-- UI Library Setup (Replace with your preferred UI library)
+local success, Library = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua"))()
+end)
+
+if not success then
+    warn("Failed to load Cloud UI Library: " .. Library)
+    return
+end
+
+local Library_Window = Library.Add_Window('Auto Parry & Clicker Settings')
+local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
+local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Settings'})
+
+-- Toggle to enable or disable auto-parry
+BladeBall_Section.Create_Toggle({
+    name = 'Enable Auto-Parry',
+    flag = 'Enable_Auto_Parry',
+    callback = function(state)
+        getgenv().Auto_Parry = state
+    end
+})
+
+Library_Window:Show()
