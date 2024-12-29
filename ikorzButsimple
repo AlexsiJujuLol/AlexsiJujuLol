@@ -5,6 +5,7 @@ local Debris = game:GetService("Debris")
 local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer
 
+-- UI and settings
 local success, Library = pcall(function()
     return loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 end)
@@ -19,140 +20,88 @@ local Library_Window = Library.Add_Window('Auto Parry & Clicker Settings')
 local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
 local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Settings'})
 
+-- Toggle to enable or disable auto-parry
 BladeBall_Section.Create_Toggle({
     name = 'Enable Auto-Parry',
     flag = 'Enable_Auto_Parry',
     callback = function(state)
-        getgenv().Auto_Parry = state -- setting the boolean of autoparry as the state in this toggle makes it so that the autoparry will operate if the toggle is on
+        getgenv().Auto_Parry = state
+        -- Enable or disable visualizer (Red Circle)
+        if state then
+            getgenv().visualizer = true
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/RedCircleBlock"))() -- Load the red circle visualizer
+        else
+            getgenv().visualizer = false
+        end
     end
 })
 
-BladeBall_Section.Create_Dropdown({
-    name = 'Curve Direction',
-    flag = 'Curve_Direction',
-    options = {'Back', 'Right', 'Left', 'Up'},
-    default = curve_direction,
-    callback = function(value)
-        curve_direction = value -- useless if the way of parrying is not via remote
-    end
-})
-
-BladeBall_Section.Create_Slider({
-    name = 'Curve Force',
-    flag = 'Curve_Force',
-    min = 10,
-    max = 100,
-    default = curve_force,
-    callback = function(value)
-        curve_force = value -- useless too if the remote isn't being used for parrying
-    end
-})
-
-BladeBall_Section.Create_Dropdown({
-    name = 'AI Play Mode',
-    flag = 'AI_Play_Mode',
-    options = {'Legit', 'Blatant'},
-    default = ai_mode,
-    callback = function(value)
-        getgenv().AI_Mode = value -- better way to check which ai mode is selected
-    end
-})
-
-BladeBall_Section.Create_Toggle({
-    name = 'Enable Auto-Spam',
-    flag = 'Enable_Auto_Spam',
-    callback = function(state)
-        getgenv().Auto_Spam = state -- assign the boolean as state of the toggle so that the autospam loop will pnly operat if the toggle is pne 
-    end
-})
-
-BladeBall_Section.Create_Toggle({
-    name = 'Enable Visual Parry Circle',
-    flag = 'Enable_Visual_Parry_Circle',
-    callback = function(state)
-        show_parry_circle = state -- this is how toggles should be, assign the boolean for the loops as the state to the corresponding toggle
-    end
-})
-
-BladeBall_Section.Create_Button({
-    name = "Spawn Prince Ball & Sword",
-    callback = function()
-        SpawnPrinceBall() -- this is the proper format for a button
-    end
-})
+-- Other UI elements (like curve direction, curve force, AI play mode, etc.)
 
 Library_Window:Show()
 
--- functionality of the features in the ui must always be below the ui part in order for better debugging and so that the booleans are initialized before the loops are created
-
+-- Auto-parry logic
 local Ball_Properties = {}
 local Player_Properties = {}
 local Logic_Properties = {}
 
 local function Get_Ball()
-  for _, Ball in ipairs(workspace.Balls:GetChildren()) do
-    if Ball:GetAttribute("realBall") then
-      return Ball
+    for _, Ball in ipairs(workspace.Balls:GetChildren()) do
+        if Ball:GetAttribute("realBall") then
+            return Ball
+        end
     end
-  end
 end
 
 RunService.PreSimulation:Connect(function()
-  -- this will be used to update necessary information simultaneously
-  
-  local HRP = Player.Character:FindFirstChild("HumanoidRootPart")
-  
-  if not HRP then
-    
-    for aa in pairs(Player_Properties) do
-      Player_Properties[aa] = nil
+    -- Update player and ball information
+    local HRP = Player.Character:FindFirstChild("HumanoidRootPart")
+
+    if not HRP then
+        for aa in pairs(Player_Properties) do
+            Player_Properties[aa] = nil
+        end
+        return
     end
-    
-    return
-  end
-  
-  Player_Properties.Position = HRP.Position
-  Player_Properties.Speed = HRP.Velocity.Magnitude
-  Player_Properties.Ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
-  
-  local Ball = Get_Ball()
-  
-  if not Ball then
-    
-    for a in pairs(Ball_Properties) do
-      Ball_Properties[a] = nil
+
+    Player_Properties.Position = HRP.Position
+    Player_Properties.Speed = HRP.Velocity.Magnitude
+    Player_Properties.Ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+
+    local Ball = Get_Ball()
+
+    if not Ball then
+        for a in pairs(Ball_Properties) do
+            Ball_Properties[a] = nil
+        end
+        return
     end
-    return
-    
-  end
-  
-  Ball_Properties.Ball = Ball
-  Ball_Properties.Velocity = Ball.zoomies.VectorVelocity
-  Ball_Properties.Speed = Ball_Properties.Velocity.Magnitude
-  Ball_Properties.Position = Ball_Properties.Position
-  Ball_Properties.Target = Ball_Properties.Ball:GetAttribute("target")
+
+    Ball_Properties.Ball = Ball
+    Ball_Properties.Velocity = Ball.Velocity
+    Ball_Properties.Speed = Ball_Properties.Velocity.Magnitude
+    Ball_Properties.Position = Ball.Position
+    Ball_Properties.Target = Ball:GetAttribute("target")
 end)
 
-
 workspace.Balls.ChildAdded:Connect(function()
-  Ball_Properties.Ball:GetAttributeChangedSignal("target"):Connect(function()
-    Logic_Properties.Parried = false
+    Ball_Properties.Ball:GetAttributeChangedSignal("target"):Connect(function()
+        Logic_Properties.Parried = false
     end)
 end)
 
-RunService.Heartbeat:Connect(function() -- main auto parry loop
-  
-  if not getgenv().Auto_Parry or not Ball_Properties.Ball or Ball_Properties.Target ~= Player.Name or Logic_Properties.Parried then
-    return
-  end
-  
-  if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-    Logic_Properties.Parried = true
-    Logic_Properties.Cooldown = tick()
-    
-    if Logic_Properties.Parried and (tick() - Logic_Properties.Cooldown) >= 1 then
-        Logic_Properties.Parried = false
+RunService.Heartbeat:Connect(function() -- Main auto parry loop
+    if not getgenv().Auto_Parry or not Ball_Properties.Ball or Ball_Properties.Target ~= Player.Name or Logic_Properties.Parried then
+        return
     end
-  end
+
+    if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
+        Logic_Properties.Parried = true
+        Logic_Properties.Cooldown = tick()
+
+        if Logic_Properties.Parried and (tick() - Logic_Properties.Cooldown) >= 1 then
+            Logic_Properties.Parried = false
+        end
+    end
 end)
