@@ -1,12 +1,10 @@
--- Load necessary services
 local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
 local RunService = game:GetService("RunService")
+local Player = Players.LocalPlayer
 
--- Load the Cloud UI Library
 local success, Library = pcall(function()
     return loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
 end)
@@ -18,201 +16,27 @@ end
 
 local Library_Window = Library.Add_Window('Auto Parry & Clicker Settings')
 
--- Variables
-local auto_parry_enabled = false
-local auto_click_enabled = false
-local auto_parry_distance = 10
-local parry_delay = 0.1
-local click_distance = 5
-local click_interval = 0.1
-local curve_direction = "Back" -- Default curve direction
-local curve_force = 50 -- Force applied for the curve effect
-local show_parry_circle = false -- Flag to show or hide the parry circle
-local parry_circle = nil
-local last_parry_time = 0
-local last_click_time = 0
-local ToggleKey = Enum.KeyCode.Z -- Key to toggle Auto-Parry
-
--- AI Play Modes
-local ai_mode = "Legit" -- Default AI mode: Legit
-local auto_spam_enabled = false -- Toggle for Auto Spam
-
--- Prince Ball and Sword Variables
-local sword = nil
-local prince_ball = nil
-
--- Function to calculate curve direction
-local function GetCurveVelocity(original_velocity)
-    local curve_vector = Vector3.zero
-
-    if curve_direction == "Back" then
-        curve_vector = Vector3.new(0, 0, -curve_force)
-    elseif curve_direction == "Right" then
-        curve_vector = Vector3.new(curve_force, 0, 0)
-    elseif curve_direction == "Left" then
-        curve_vector = Vector3.new(-curve_force, 0, 0)
-    elseif curve_direction == "Up" then
-        curve_vector = Vector3.new(0, curve_force, 0)
-    end
-
-    return original_velocity + curve_vector
-end
-
--- Function to update the parry circle's position and size
-local function UpdateParryCircle()
-    if not show_parry_circle then
-        if parry_circle then
-            parry_circle:Destroy()
-            parry_circle = nil
-        end
-        return
-    end
-
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
-
-    if not parry_circle then
-        parry_circle = Instance.new("Part")
-        parry_circle.Shape = Enum.PartType.Cylinder
-        parry_circle.Anchored = true
-        parry_circle.CanCollide = false
-        parry_circle.Transparency = 0.5
-        parry_circle.Material = Enum.Material.Neon
-        parry_circle.Color = Color3.new(0, 0, 0) -- Set the color to black
-        parry_circle.Parent = workspace
-    end
-
-    parry_circle.Size = Vector3.new(0.2, auto_parry_distance * 2, auto_parry_distance * 2)
-    parry_circle.CFrame = CFrame.new(player.Character.HumanoidRootPart.Position) * CFrame.Angles(math.pi / 2, 0, 0)
-end
-
--- Function to automatically parry balls with curve
-local function AutoParryBall()
-    while auto_parry_enabled do
-        if not player.Character then break end
-
-        local character = player.Character
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-
-        if rootPart and tick() - last_parry_time > parry_delay then
-            last_parry_time = tick()
-
-            local nearby_ball = nil
-            local min_distance = auto_parry_distance
-
-            -- Find the nearest ball within range
-            for _, ball in pairs(workspace:GetChildren()) do
-                if ball.Name == "Ball" and ball:IsA("Part") then
-                    local distance = (ball.Position - rootPart.Position).Magnitude
-                    if distance <= min_distance then
-                        nearby_ball = ball
-                        min_distance = distance
-                    end
-                end
-            end
-
-            -- If a ball is within range, apply the parry with curve logic
-            if nearby_ball then
-                local original_velocity = (nearby_ball.Position - rootPart.Position).unit * 100
-                local curved_velocity = GetCurveVelocity(original_velocity)
-
-                local bodyVelocity = Instance.new("BodyVelocity")
-                bodyVelocity.MaxForce = Vector3.new(1e4, 1e4, 1e4)
-                bodyVelocity.Velocity = curved_velocity
-                bodyVelocity.Parent = nearby_ball
-                Debris:AddItem(bodyVelocity, 0.5) -- Clean up after parry
-                print("Parried a ball with a curve!")
-            end
-        end
-        task.wait(0.05)
-    end
-end
-
--- Function to execute Red Circle Auto-Block
-local function ActivateRedCircle()
-    getgenv().visualizer = true
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/RedCircleBlock"))()
-    print("Red Circle Auto-Block Activated!")
-end
-
--- Function to spawn Prince Ball (and give sword)
-local function SpawnPrinceBall()
-    -- Spawn a Prince Ball
-    prince_ball = Instance.new("Part")
-    prince_ball.Name = "PrinceBall"
-    prince_ball.Shape = Enum.PartType.Ball
-    prince_ball.Size = Vector3.new(2, 2, 2)
-    prince_ball.Position = player.Character.HumanoidRootPart.Position + Vector3.new(5, 0, 0) -- Offset from player
-    prince_ball.Color = Color3.fromRGB(255, 215, 0) -- Golden color (or any desired color)
-    prince_ball.Anchored = true
-    prince_ball.Parent = workspace
-
-    -- Create sword
-    sword = Instance.new("Part")
-    sword.Name = "Sword"
-    sword.Size = Vector3.new(1, 5, 1)
-    sword.Position = player.Character.HumanoidRootPart.Position + Vector3.new(2, 5, 0) -- Offset from player
-    sword.Color = Color3.fromRGB(0, 0, 255) -- Blue sword color
-    sword.Anchored = true
-    sword.Parent = workspace
-
-    print("Prince Ball and Sword Spawned!")
-end
-
--- Toggle to enable/disable auto-parry
-local function ToggleAutoParry(state)
-    auto_parry_enabled = state
-    if state then
-        task.spawn(AutoParryBall)
-        ActivateRedCircle()
-        print("Auto-Parry and Red Circle Activated!")
-    else
-        print("Auto-Parry Disabled!")
-    end
-end
-
--- Toggle AI Play Mode (Legit/Blatant)
-local function SetAIPlayMode(mode)
-    ai_mode = mode
-    print("AI Play Mode set to: " .. ai_mode)
-end
-
--- Toggle for Auto Spam
-local function ToggleAutoSpam(state)
-    auto_spam_enabled = state
-    if state then
-        print("Auto-Spam Enabled!")
-        -- You can add the code for the actual spamming logic here (e.g., parry, click, etc.)
-    else
-        print("Auto-Spam Disabled!")
-    end
-end
-
--- UI Setup
 local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
 local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Settings'})
 
--- Toggle for Auto-Parry
 BladeBall_Section.Create_Toggle({
     name = 'Enable Auto-Parry',
     flag = 'Enable_Auto_Parry',
     callback = function(state)
-        ToggleAutoParry(state)
+        getgenv().Auto_Parry = state -- setting the boolean of autoparry as the state in this toggle makes it so that the autoparry will operate if the toggle is on
     end
 })
 
--- Dropdown to select curve direction
 BladeBall_Section.Create_Dropdown({
     name = 'Curve Direction',
     flag = 'Curve_Direction',
     options = {'Back', 'Right', 'Left', 'Up'},
     default = curve_direction,
     callback = function(value)
-        curve_direction = value
-        print("Curve Direction set to:", curve_direction)
+        curve_direction = value -- useless if the way of parrying is not via remote
     end
 })
 
--- Slider for Curve Force
 BladeBall_Section.Create_Slider({
     name = 'Curve Force',
     flag = 'Curve_Force',
@@ -220,50 +44,115 @@ BladeBall_Section.Create_Slider({
     max = 100,
     default = curve_force,
     callback = function(value)
-        curve_force = value
-        print("Curve Force set to:", curve_force)
+        curve_force = value -- useless too if the remote isn't being used for parrying
     end
 })
 
--- Dropdown for AI Play Mode
 BladeBall_Section.Create_Dropdown({
     name = 'AI Play Mode',
     flag = 'AI_Play_Mode',
     options = {'Legit', 'Blatant'},
     default = ai_mode,
     callback = function(value)
-        SetAIPlayMode(value)
+        getgenv().AI_Mode = value -- better way to check which ai mode is selected
     end
 })
 
--- Toggle for Auto-Spam
 BladeBall_Section.Create_Toggle({
     name = 'Enable Auto-Spam',
     flag = 'Enable_Auto_Spam',
     callback = function(state)
-        ToggleAutoSpam(state)
+        getgenv().Auto_Spam = state -- assign the boolean as state of the toggle so that the autospam loop will pnly operat if the toggle is pne 
     end
 })
 
--- Toggle for Visual Parry Circle
 BladeBall_Section.Create_Toggle({
     name = 'Enable Visual Parry Circle',
     flag = 'Enable_Visual_Parry_Circle',
     callback = function(state)
-        show_parry_circle = state
-        UpdateParryCircle()  -- Update the visual circle based on the toggle
+        show_parry_circle = state -- this is how toggles should be, assign the boolean for the loops as the state to the corresponding toggle
     end
 })
 
--- Button to spawn Prince Ball and Sword
 BladeBall_Section.Create_Button({
     name = "Spawn Prince Ball & Sword",
     callback = function()
-        SpawnPrinceBall()
+        SpawnPrinceBall() -- this is the proper format for a button
     end
 })
 
--- Show UI
 Library_Window:Show()
 
-print("Auto-Parry with Curve, AI Play Modes, Auto-Spam, Prince Ball, Sword, and Visual Parry Circle Script Loaded!")
+-- functionality of the features in the ui must always be below the ui part in order for better debugging and so that the booleans are initialized before the loops are created
+
+local Ball_Properties = {}
+local Player_Properties = {}
+local Logic_Properties = {}
+
+local function Get_Ball()
+  for _, Ball in ipairs(workspace.Balls:GetChildren()) do
+    if Ball:GetAttribute("realBall") then
+      return Ball
+    end
+  end
+end
+
+RunService.PreSimulation:Connect(function()
+  -- this will be used to update necessary information simultaneously
+  
+  local HRP = Player.Character:FindFirstChild("HumanoidRootPart")
+  
+  if not HRP then
+    
+    for aa in pairs(Player_Properties) do
+      Player_Properties[aa] = nil
+    end
+    
+    return
+  end
+  
+  Player_Properties.Position = HRP.Position
+  Player_Properties.Speed = HRP.Velocity.Magnitude
+  Player_Properties.Ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
+  
+  local Ball = Get_Ball()
+  
+  if not Ball then
+    
+    for a in pairs(Ball_Properties) do
+      Ball_Properties[a] = nil
+    end
+    return
+    
+  end
+  
+  Ball_Properties.Ball = Ball
+  Ball_Properties.Velocity = Ball.zoomies.VectorVelocity
+  Ball_Properties.Speed = Ball_Properties.Velocity.Magnitude
+  Ball_Properties.Position = Ball_Properties.Position
+  Ball_Properties.Target = Ball_Properties.Ball:GetAttribute("target")
+end)
+
+
+workspace.Balls.ChildAdded:Connect(function()
+  Ball_Properties.Ball:GetAttributeChangedSignal("target"):Connect(function()
+    Logic_Properties.Parried = false
+    end)
+end)
+
+RunService.Heartbeat:Connect(function() -- main auto parry loop
+  
+  if not getgenv().Auto_Parry or not Ball_Properties.Ball or Ball_Properties.Target ~= Player.Name or Logic_Properties.Parried then
+    return
+  end
+  
+  if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+    Logic_Properties.Parried = true
+    Logic_Properties.Cooldown = tick()
+    
+    if Logic_Properties.Parried and (tick() - Logic_Properties.Cooldown) >= 1 then
+        Logic_Properties.Parried = false
+    end
+  end
+end)
