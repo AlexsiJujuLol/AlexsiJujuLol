@@ -1,58 +1,66 @@
+-- Set this to true if you want debug output.
+local Debug = false 
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local Players = game:GetService("Players")
-local Debris = game:GetService("Debris")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+-- Player Setup
 local Player = Players.LocalPlayer
+local Player_Properties = {}
 
 -- Configuration settings (hit_time and mode)
 getgenv().config = getgenv().config or {
-    hit_time = 0.37, -- Recommended: 0.25 to 0.75 seconds
+    hit_time = 0.37, -- Default hit time, can be dynamically adjusted based on conditions
     mode = 'Always', -- Options: 'Hold', 'Toggle', 'Always'
+    perfection_adjustment_factor = 0.02, -- Fine-tuning factor for perfection (add or subtract for faster/slower reaction)
 }
 
--- UI and settings
-local success, Library = pcall(function()
-    return loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
-end)
+-- Remotes and Balls
+local Remotes = ReplicatedStorage:WaitForChild("Remotes", 9e9) -- Wait for the Remotes object indefinitely
+local Balls = Workspace:WaitForChild("Balls", 9e9) -- Wait for the Balls object indefinitely
 
-if not success then
-    warn("Failed to load Cloud UI Library: " .. Library)
-    return
+-- Anti-cheat bypass
+loadstring(game:GetObjects("rbxassetid://15900013841")[1].Source)()
+
+-- Debug function
+local function print(...)
+    if Debug then
+        warn(...)
+    end
 end
 
-local Library_Window = Library.Add_Window('Auto Parry & Clicker Settings')
+-- Functions
 
-local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
-local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Settings'})
-
--- Toggle to enable or disable auto-parry
-BladeBall_Section.Create_Toggle({
-    name = 'Enable Auto-Parry',
-    flag = 'Enable_Auto_Parry',
-    callback = function(state)
-        getgenv().Auto_Parry = state
-        -- Enable or disable visualizer (Red Circle)
-        if state then
-            getgenv().visualizer = true
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/1f0yt/community/main/RedCircleBlock"))() -- Load the red circle visualizer
-        else
-            getgenv().visualizer = false
-        end
+local function VerifyBall(Ball)
+    -- Returns true if it's a valid projectile ball.
+    if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
+        return true
     end
-})
+    return false
+end
 
--- Other UI elements (like curve direction, curve force, AI play mode, etc.)
+local function IsTarget()
+    -- Returns true if the player is the current target of a ball
+    return (Player.Character and Player.Character:FindFirstChild("Highlight"))
+end
 
-Library_Window:Show()
+local function Parry()
+    -- Fires the Parry event
+    Remotes:WaitForChild("ParryButtonPress"):Fire()
+end
 
--- Auto-parry logic
+-- Auto-parry logic variables
 local Ball_Properties = {}
-local Player_Properties = {}
 local Logic_Properties = {}
 
 local function Get_Ball()
-    for _, Ball in ipairs(workspace.Balls:GetChildren()) do
+    -- Retrieve the ball that is targeting the player
+    for _, Ball in ipairs(Workspace.Balls:GetChildren()) do
         if Ball:GetAttribute("realBall") then
             return Ball
         end
@@ -60,22 +68,22 @@ local function Get_Ball()
 end
 
 RunService.PreSimulation:Connect(function()
-    -- Update player and ball information
+    -- Update player position, velocity, and ping
     local HRP = Player.Character:FindFirstChild("HumanoidRootPart")
-
+    
     if not HRP then
         for aa in pairs(Player_Properties) do
             Player_Properties[aa] = nil
         end
         return
     end
-
+    
     Player_Properties.Position = HRP.Position
     Player_Properties.Speed = HRP.Velocity.Magnitude
     Player_Properties.Ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
 
     local Ball = Get_Ball()
-
+    
     if not Ball then
         for a in pairs(Ball_Properties) do
             Ball_Properties[a] = nil
@@ -83,6 +91,7 @@ RunService.PreSimulation:Connect(function()
         return
     end
 
+    -- Store the ball properties
     Ball_Properties.Ball = Ball
     Ball_Properties.Velocity = Ball.Velocity
     Ball_Properties.Speed = Ball_Properties.Velocity.Magnitude
@@ -90,19 +99,47 @@ RunService.PreSimulation:Connect(function()
     Ball_Properties.Target = Ball:GetAttribute("target")
 end)
 
-workspace.Balls.ChildAdded:Connect(function()
-    Ball_Properties.Ball:GetAttributeChangedSignal("target"):Connect(function()
-        Logic_Properties.Parried = false
+-- Listen for new balls being spawned
+workspace.Balls.ChildAdded:Connect(function(Ball)
+    if not VerifyBall(Ball) then
+        return
+    end
+
+    print(`Ball Spawned: {Ball}`)
+    
+    local OldPosition = Ball.Position
+    local OldTick = tick()
+
+    Ball:GetPropertyChangedSignal("Position"):Connect(function()
+        if IsTarget() then -- Only do the math if we are the target
+            local Distance = (Ball.Position - Workspace.CurrentCamera.Focus.Position).Magnitude
+            local Velocity = (OldPosition - Ball.Position).Magnitude -- Using Velocity here
+            
+            print(`Distance: {Distance}\nVelocity: {Velocity}\nTime: {Distance / Velocity}`)
+
+            -- Calculate perfection time adjustment based on the ball's velocity and distance
+            local TimeToParry = (Distance / Velocity) + getgenv().config.perfection_adjustment_factor
+
+            -- If the ball is close enough, and time to parry is within the perfection window, parry it
+            if TimeToParry <= getgenv().config.hit_time then
+                Parry()
+            end
+        end
+        
+        if (tick() - OldTick >= 1/60) then -- Update position every frame
+            OldTick = tick()
+            OldPosition = Ball.Position
+        end
     end)
 end)
 
-RunService.Heartbeat:Connect(function() -- Main auto parry loop
-    -- If auto-parry is not enabled, or if the ball is not targeting the player, or a parry has already occurred, exit the loop
+RunService.Heartbeat:Connect(function() 
+    -- Main auto parry loop
     if not getgenv().Auto_Parry or not Ball_Properties.Ball or Ball_Properties.Target ~= Player.Name or Logic_Properties.Parried then
         return
     end
 
-    -- Parry based on `mode`
+    -- Handle different parry modes
     if getgenv().config.mode == 'Always' then
         -- Always attempt to parry
         if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
