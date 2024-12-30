@@ -1,204 +1,157 @@
--- Set this to true if you want debug output.
-local Debug = false
-
--- Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 
--- Player Setup
-local Player = Players.LocalPlayer
-local Player_Properties = {}
-
--- Configuration settings (hit_time and mode)
-getgenv().config = getgenv().config or {
-    hit_time = 0.37, -- Default hit time, can be dynamically adjusted based on conditions
-    mode = 'Always', -- Options: 'Hold', 'Toggle', 'Always'
-    perfection_adjustment_factor = 0.02, -- Fine-tuning factor for perfection (add or subtract for faster/slower reaction)
-}
-
--- Remotes and Balls
-local Remotes = ReplicatedStorage:WaitForChild("Remotes", 9e9) -- Wait for the Remotes object indefinitely
-local Balls = Workspace:WaitForChild("Balls", 9e9) -- Wait for the Balls object indefinitely
-
--- Anti-cheat bypass
-loadstring(game:GetObjects("rbxassetid://15900013841")[1].Source)()
-
--- Debug function
-local function print(...)
-    if Debug then
-        warn(...)
-    end
-end
-
--- Functions
-local function VerifyBall(Ball)
-    -- Returns true if it's a valid projectile ball.
-    if typeof(Ball) == "Instance" and Ball:IsA("BasePart") and Ball:IsDescendantOf(Balls) and Ball:GetAttribute("realBall") == true then
-        return true
-    end
-    return false
-end
-
-local function IsTarget()
-    -- Returns true if the player is the current target of a ball
-    return (Player.Character and Player.Character:FindFirstChild("Highlight"))
-end
-
-local function Parry()
-    -- Fires the Parry event
-    Remotes:WaitForChild("ParryButtonPress"):Fire()
-end
-
--- Auto-parry logic variables
-local Ball_Properties = {}
-local Logic_Properties = {}
-
-local function Get_Ball()
-    -- Retrieve the ball that is targeting the player
-    for _, Ball in ipairs(Workspace.Balls:GetChildren()) do
-        if Ball:GetAttribute("realBall") then
-            return Ball
-        end
-    end
-end
-
-RunService.PreSimulation:Connect(function()
-    -- Update player position, velocity, and ping
-    local HRP = Player.Character:FindFirstChild("HumanoidRootPart")
-    
-    if not HRP then
-        for aa in pairs(Player_Properties) do
-            Player_Properties[aa] = nil
-        end
-        return
-    end
-    
-    Player_Properties.Position = HRP.Position
-    Player_Properties.Speed = HRP.Velocity.Magnitude
-    Player_Properties.Ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
-
-    local Ball = Get_Ball()
-    
-    if not Ball then
-        for a in pairs(Ball_Properties) do
-            Ball_Properties[a] = nil
-        end
-        return
-    end
-
-    -- Store the ball properties
-    Ball_Properties.Ball = Ball
-    Ball_Properties.Velocity = Ball.Velocity
-    Ball_Properties.Speed = Ball_Properties.Velocity.Magnitude
-    Ball_Properties.Position = Ball.Position
-    Ball_Properties.Target = Ball:GetAttribute("target")
-end)
-
--- Listen for new balls being spawned
-workspace.Balls.ChildAdded:Connect(function(Ball)
-    if not VerifyBall(Ball) then
-        return
-    end
-
-    print(`Ball Spawned: {Ball}`)
-    
-    local OldPosition = Ball.Position
-    local OldTick = tick()
-
-    Ball:GetPropertyChangedSignal("Position"):Connect(function()
-        if IsTarget() then -- Only do the math if we are the target
-            local Distance = (Ball.Position - Workspace.CurrentCamera.Focus.Position).Magnitude
-            local Velocity = (OldPosition - Ball.Position).Magnitude -- Using Velocity here
-            
-            print(`Distance: {Distance}\nVelocity: {Velocity}\nTime: {Distance / Velocity}`)
-
-            -- Calculate perfection time adjustment based on the ball's velocity and distance
-            local TimeToParry = (Distance / Velocity) + getgenv().config.perfection_adjustment_factor
-
-            -- If the ball is close enough, and time to parry is within the perfection window, parry it
-            if TimeToParry <= getgenv().config.hit_time then
-                Parry()
-            end
-        end
-        
-        if (tick() - OldTick >= 1/60) then -- Update position every frame
-            OldTick = tick()
-            OldPosition = Ball.Position
-        end
-    end)
-end)
-
-RunService.Heartbeat:Connect(function() 
-    -- Main auto parry loop
-    if not getgenv().Auto_Parry or not Ball_Properties.Ball or Ball_Properties.Target ~= Player.Name or Logic_Properties.Parried then
-        return
-    end
-
-    -- Handle different parry modes
-    if getgenv().config.mode == 'Always' then
-        -- Always attempt to parry
-        if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
-            Logic_Properties.Parried = true
-            Logic_Properties.Cooldown = tick()
-
-            -- Reset parry after hit_time
-            if Logic_Properties.Parried and (tick() - Logic_Properties.Cooldown) >= getgenv().config.hit_time then
-                Logic_Properties.Parried = false
-            end
-        end
-    elseif getgenv().config.mode == 'Hold' then
-        -- Hold mode: parry as long as the user is holding a specific key (e.g., "E")
-        if UserInputService:IsKeyDown(Enum.KeyCode.E) then
-            if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
-                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
-                Logic_Properties.Parried = true
-                Logic_Properties.Cooldown = tick()
-            end
-        else
-            Logic_Properties.Parried = false
-        end
-    elseif getgenv().config.mode == 'Toggle' then
-        -- Toggle mode: toggle parry on and off when a specific key (e.g., "T") is pressed
-        if UserInputService:IsKeyDown(Enum.KeyCode.T) then
-            if not Logic_Properties.Parried then
-                if Player_Properties.Position:DistanceFromCharacter(Ball_Properties.Position) <= Ball_Properties.Speed + (Player_Properties.Ping / 1000) / math.pi then
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0) -- Trigger parry
-                    Logic_Properties.Parried = true
-                    Logic_Properties.Cooldown = tick()
-                end
-            end
-        else
-            Logic_Properties.Parried = false
-        end
-    end
-end)
-
--- UI Library Setup (Replace with your preferred UI library)
-local success, Library = pcall(function()
+local Library_Success, Library = pcall(function()
     return loadstring(game:HttpGet("https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua"))()
 end)
 
-if not success then
-    warn("Failed to load Cloud UI Library: " .. Library)
+if not Library_Success then
+    warn("Failed to load Cloud UI Library: " .. tostring(Library))
     return
 end
 
-local Library_Window = Library.Add_Window('Auto Parry & Clicker Settings')
-local BladeBall_Tab = Library_Window.Create_Tab({name = 'Blade Ball', icon = 'rbxassetid://6023426975'})
-local BladeBall_Section = BladeBall_Tab.Create_Section({name = 'Auto Settings'})
+-- Configuration de Paws
+getgenv().Paws = {
+    ["AutoParry"] = false, -- Par défaut désactivé
+    ["PingBased"] = true,
+    ["PingBasedOffset"] = 0,
+    ["DistanceToParry"] = 0.5,
+    ["BallSpeedCheck"] = true,
+    ["SpamDelay"] = 0.1,
+}
 
--- Toggle to enable or disable auto-parry
-BladeBall_Section.Create_Toggle({
-    name = 'Enable Auto-Parry',
-    flag = 'Enable_Auto_Parry',
+-- Variables
+local PawsRemotes = ReplicatedStorage:WaitForChild("Remotes", 9e9)
+local PawsBalls = Workspace:WaitForChild("Balls", 9e9)
+local PawsTable = getgenv().Paws
+
+-- Fonctions utilitaires
+local function IsTheTarget()
+    return Player.Character and Player.Character:FindFirstChild("Highlight")
+end
+
+local function FindBall()
+    for _, v in pairs(PawsBalls:GetChildren()) do
+        if v:GetAttribute("realBall") == true then
+            return v
+        end
+    end
+end
+
+local function SendMouseClick(spamDelay)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, spamDelay)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, spamDelay)
+end
+
+-- Script principal de parry
+local function AutoParryHandler()
+    RunService.PreRender:Connect(function()
+        if not FindBall() then return end
+
+        local Ball = FindBall()
+        local BallPosition = Ball.Position
+        local BallVelocity = Ball.AssemblyLinearVelocity.Magnitude
+        local Distance = Player:DistanceFromCharacter(BallPosition)
+        local Ping = BallVelocity * (game.Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 1000)
+
+        if PawsTable.PingBased then
+            Distance -= Ping + PawsTable.PingBasedOffset
+        end
+
+        if PawsTable.BallSpeedCheck and BallVelocity == 0 then return end
+
+        if (Distance / BallVelocity) <= PawsTable.DistanceToParry and IsTheTarget() and PawsTable.AutoParry then
+            SendMouseClick(PawsTable.SpamDelay)
+        end
+    end)
+
+    -- Gestion du spam automatique
+    task.spawn(function()
+        while task.wait() do
+            if getgenv().DetectSpam then
+                local Ball = FindBall()
+                if Ball then
+                    local TargetPlayer = Ball:GetAttribute("target")
+                    if TargetPlayer == Player.Name or (Player.Character and Player.Character:FindFirstChild("Highlight")) then
+                        SendMouseClick(PawsTable.SpamDelay)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- UI
+local Library_Window = Library.Add_Window("Auto Parry Settings")
+local Paws_Tab = Library_Window.Create_Tab({name = "Paws Parry", icon = "rbxassetid://6023426975"})
+local Paws_Section = Paws_Tab.Create_Section({name = "Auto Parry"})
+
+Paws_Section.Create_Toggle({
+    name = "Enable Auto-Parry",
+    flag = "Enable_Auto_Parry",
     callback = function(state)
-        getgenv().Auto_Parry = state
+        getgenv().Paws.AutoParry = state
+        if state then
+            AutoParryHandler() -- Active le script principal
+        else
+            warn("Auto-Parry disabled")
+        end
     end
 })
 
-Library_Window:Show()
+Paws_Section.Create_Slider({
+    name = "Ping-Based Offset",
+    flag = "Ping_Offset",
+    min = 0,
+    max = 0.5,
+    float = 0.01,
+    callback = function(value)
+        getgenv().Paws.PingBasedOffset = value
+    end
+})
+
+Paws_Section.Create_Slider({
+    name = "Distance to Parry",
+    flag = "Distance_Parry",
+    min = 0.1,
+    max = 1,
+    float = 0.01,
+    callback = function(value)
+        getgenv().Paws.DistanceToParry = value
+    end
+})
+
+Paws_Section.Create_Toggle({
+    name = "Enable Spam Clicks",
+    flag = "Enable_Spam_Clicks",
+    callback = function(state)
+        getgenv().DetectSpam = state
+    end
+})
+
+Paws_Section.Create_Slider({
+    name = "Spam Delay",
+    flag = "Spam_Delay",
+    min = 0.05,
+    max = 0.5,
+    float = 0.01,
+    callback = function(value)
+        getgenv().Paws.SpamDelay = value
+    end
+})
+
+-- Effet visuel pour Parry
+local function ShowParryEffect()
+    local effect = Instance.new("Part")
+    effect.Size = Vector3.new(1, 1, 1)
+    effect.Shape = Enum.PartType.Ball
+    effect.Color = Color3.fromRGB(0, 255, 0)
+    effect.Position = Player.Character.HumanoidRootPart.Position
+    effect.Anchored = true
+    effect.Parent = Workspace
+    local tween = TweenService:Create(effect, TweenInfo.new(0.5), {Size = Vector3.new(5, 5, 5),
