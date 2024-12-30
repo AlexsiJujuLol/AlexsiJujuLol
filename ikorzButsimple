@@ -1,59 +1,33 @@
--- Load Byte UI Library
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua"))()
 
--- Create the Main Window
-local Library_Window = Library.Add_Window('Script Executor')
+local Library_Window = Library.Add_Window('Acceptions')
+local Blatant_Tab = Library_Window.Create_Tab({name = 'Blatant', icon = 'rbxassetid://'})
 
--- Create a Tab
-local Script_Tab = Library_Window.Create_Tab({
-    name = 'Script',
-    icon = 'rbxassetid://'
-})
+local Blatant_Section = Blatant_Tab.Create_Section()
 
--- Create a Section in the Tab
-local Script_Section = Script_Tab.Create_Section()
-
--- Add a Button to Execute the Loadstring Script
-local Execute_Script = Script_Section.Create_Button({
-    name = 'Execute Script',
-    callback = function()
-        local scriptURL = "https://raw.githubusercontent.com/AlexsiJujuLol/Ikorz/main/AlexsiJujuLol/Ikorz.lua"
-        local success, scriptContent = pcall(function()
-            return game:HttpGet(scriptURL)
-        end)
-
-        if success then
-            local successLoad, err = pcall(function()
-                loadstring(scriptContent)()
-            end)
-
-            if successLoad then
-                print('Script Executed Successfully!')
-            else
-                warn('Error Executing Script:', err)
-            end
-        else
-            warn('Failed to Fetch Script')
-        end
-    end
-})
-
--- Add a DropToggle for Auto Parry
-local Auto_Parry = Script_Section.Create_DropToggle({
+local Auto_Parry = Blatant_Section.Create_Toggle({
     name = 'Auto Parry',
-    section = 'left', -- Align it to the left
     flag = 'Auto_Parry',
-
-    options = {'Custom', 'Random', 'Backwards'},
     callback = function(state)
         if state then
-            print('Auto Parry Enabled')
+            -- Auto Parry Logic Here
         else
-            print('Auto Parry Disabled')
+            -- Disable Auto Parry Logic Here
         end
-    end,
-
-    callback2 = function(selected)
-        print('Selected Mode:', selected)
     end
 })
+
+local Manual_Range_Spam = Blatant_Section.Create_Toggle({
+    name = 'Spam Manual Range',
+    flag = 'Manual_Range_Spam',
+    callback = function(state)
+        if state then
+            -- Spam Manual Range Logic Here
+        else
+            -- Disable Spam Manual Range Logic Here
+        end
+    end
+})
+
+local scriptURL = "https://raw.githubusercontent.com/AlexsiJujuLol/Ikorz/main/Ikaz.lua"
+loadstring(game:HttpGet(scriptURL))()
