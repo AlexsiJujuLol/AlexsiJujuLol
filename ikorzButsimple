@@ -27,84 +27,129 @@ getgenv().Paws = {
 }
 
 -- Variables
-local PawsRemotes = ReplicatedStorage:WaitForChild("Remotes", 9e9)
-local PawsBalls = Workspace:WaitForChild("Balls", 9e9)
-local PawsTable = getgenv().Paws
+local visualise = false -- Visualizer toggle
+local sphere = nil -- For storing the visualizer part
 
 -- Utility Functions
-local function IsTheTarget()
-    return Player.Character and Player.Character:FindFirstChild("Highlight")
+local function get_player()
+    return Players.LocalPlayer
 end
 
-local function FindBall()
-    for _, v in pairs(PawsBalls:GetChildren()) do
-        if v:GetAttribute("realBall") == true then
+local function get_character()
+    local player = get_player()
+    return player and player.Character
+end
+
+local function get_humanoid_root_part()
+    local char = get_character()
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local function get_ball()
+    local ballContainer = Workspace:FindFirstChild("Balls")
+    if not ballContainer then return nil end
+
+    for _, v in pairs(ballContainer:GetChildren()) do
+        if not v.Anchored then
             return v
         end
     end
+    return nil
 end
 
-local function SendMouseClick(spamDelay)
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, spamDelay)
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, spamDelay)
+local function calculate_parry_distance()
+    local ball = get_ball()
+    if ball then
+        local ping = get_player():GetNetworkPing() * 20
+        return math.clamp(ball.Velocity.Magnitude / 2.4 + ping, 15, 200)
+    end
+    return 15
 end
 
-local function ShowParryEffect()
-    if not getgenv().Paws.ShowParryEffect then return end -- Only show effect if enabled
+local function create_visualizer()
+    -- Create the visualizer sphere
+    sphere = Instance.new("Part")
+    sphere.Shape = Enum.PartType.Ball
+    sphere.Anchored = true
+    sphere.CanCollide = false
+    sphere.CastShadow = false
+    sphere.Transparency = 1
+    sphere.Material = Enum.Material.ForceField
+    sphere.Parent = Workspace
 
-    local effect = Instance.new("Part")
-    effect.Size = Vector3.new(1, 1, 1)
-    effect.Shape = Enum.PartType.Ball
-    effect.Color = Color3.fromRGB(0, 255, 0)
-    effect.Position = Player.Character.HumanoidRootPart.Position
-    effect.Anchored = true
-    effect.Transparency = 0.5
-    effect.Parent = Workspace
+    local hue = 0
 
-    local tween = TweenService:Create(effect, TweenInfo.new(0.5), {Size = Vector3.new(5, 5, 5), Transparency = 1})
-    tween:Play()
-    tween.Completed:Connect(function()
-        effect:Destroy()
-    end)
-end
-
--- Main Script for Parry
-local function AutoParryHandler()
-    RunService.PreRender:Connect(function()
-        if not FindBall() then return end
-
-        local Ball = FindBall()
-        local BallPosition = Ball.Position
-        local BallVelocity = Ball.AssemblyLinearVelocity.Magnitude
-        local Distance = Player:DistanceFromCharacter(BallPosition)
-        local Ping = BallVelocity * (game.Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 1000)
-
-        if PawsTable.PingBased then
-            Distance -= Ping + PawsTable.PingBasedOffset
+    local function update_visualizer()
+        if not visualise then
+            sphere.Transparency = 1
+            return
         end
 
-        if PawsTable.BallSpeedCheck and BallVelocity == 0 then return end
-
-        if (Distance / BallVelocity) <= PawsTable.DistanceToParry and IsTheTarget() and PawsTable.AutoParry then
-            SendMouseClick(PawsTable.SpamDelay)
-            ShowParryEffect() -- Trigger parry effect
+        local humanoidRootPart = get_humanoid_root_part()
+        if not humanoidRootPart then
+            sphere.Transparency = 1
+            return
         end
+
+        sphere.Transparency = 0.5
+        local parryDistance = calculate_parry_distance()
+        sphere.Size = Vector3.new(parryDistance * 2, parryDistance * 2, parryDistance * 2)
+        sphere.Position = humanoidRootPart.Position
+
+        hue = (hue + 0.01) % 1
+        sphere.Color = Color3.fromHSV(hue, 1, 1)
+    end
+
+    local function is_ball_within_visualizer(ball)
+        local humanoidRootPart = get_humanoid_root_part()
+        if not humanoidRootPart or not ball then
+            return false
+        end
+
+        local distance = (humanoidRootPart.Position - ball.Position).Magnitude
+        return distance <= sphere.Size.X / 2
+    end
+
+    local function parry_if_valid(ball)
+        if ball and is_ball_within_visualizer(ball) and Player.Character:FindFirstChild("Highlight") then
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+        end
+    end
+
+    RunService.RenderStepped:Connect(function()
+        update_visualizer()
+
+        local ball = get_ball()
+        parry_if_valid(ball)
     end)
 
-    -- Spam Handler
-    task.spawn(function()
-        while task.wait() do
-            if getgenv().DetectSpam then
-                local Ball = FindBall()
-                if Ball then
-                    local TargetPlayer = Ball:GetAttribute("target")
-                    if TargetPlayer == Player.Name or (Player.Character and Player.Character:FindFirstChild("Highlight")) then
-                        SendMouseClick(PawsTable.SpamDelay)
-                    end
-                end
+    local player = get_player()
+    if player then
+        player.CharacterAdded:Connect(function()
+            wait(0.1)
+            if visualise then
+                update_visualizer()
             end
+        end)
+    end
+end
+
+-- Toggle Visualizer
+local function toggle_visualizer(state)
+    visualise = state
+    if state then
+        if not sphere then
+            create_visualizer()
         end
-    end)
+        warn("Visualizer Enabled")
+    else
+        if sphere then
+            sphere:Destroy()
+            sphere = nil
+        end
+        warn("Visualizer Disabled")
+    end
 end
 
 -- UI Setup
@@ -117,64 +162,19 @@ Paws_Section.Create_Toggle({
     flag = "Enable_Auto_Parry",
     callback = function(state)
         getgenv().Paws.AutoParry = state
+        toggle_visualizer(state) -- Enable or disable visualizer
         if state then
-            AutoParryHandler()
+            warn("Auto-Parry enabled")
         else
             warn("Auto-Parry disabled")
         end
     end
 })
 
-Paws_Section.Create_Slider({
-    name = "Ping-Based Offset",
-    flag = "Ping_Offset",
-    min = 0,
-    max = 0.5,
-    float = 0.01,
-    callback = function(value)
-        getgenv().Paws.PingBasedOffset = value
-    end
-})
-
-Paws_Section.Create_Slider({
-    name = "Distance to Parry",
-    flag = "Distance_Parry",
-    min = 0.1,
-    max = 1,
-    float = 0.01,
-    callback = function(value)
-        getgenv().Paws.DistanceToParry = value
-    end
-})
-
 Paws_Section.Create_Toggle({
-    name = "Enable Spam Clicks",
-    flag = "Enable_Spam_Clicks",
+    name = "Enable Visualizer",
+    flag = "Enable_Visualizer",
     callback = function(state)
-        getgenv().DetectSpam = state
-    end
-})
-
-Paws_Section.Create_Slider({
-    name = "Spam Delay",
-    flag = "Spam_Delay",
-    min = 0.05,
-    max = 0.5,
-    float = 0.01,
-    callback = function(value)
-        getgenv().Paws.SpamDelay = value
-    end
-})
-
-Paws_Section.Create_Toggle({
-    name = "Show Parry Effect",
-    flag = "Show_Parry_Effect",
-    callback = function(state)
-        getgenv().Paws.ShowParryEffect = state
-        if state then
-            warn("Parry Effect Enabled")
-        else
-            warn("Parry Effect Disabled")
-        end
+        toggle_visualizer(state)
     end
 })
