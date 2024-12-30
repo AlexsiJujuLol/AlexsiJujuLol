@@ -15,14 +15,15 @@ if not Library_Success then
     return
 end
 
--- Configuration de Paws
+-- Configuration
 getgenv().Paws = {
-    ["AutoParry"] = false, -- Par défaut désactivé
+    ["AutoParry"] = false, -- Default disabled
     ["PingBased"] = true,
     ["PingBasedOffset"] = 0,
     ["DistanceToParry"] = 0.5,
     ["BallSpeedCheck"] = true,
     ["SpamDelay"] = 0.1,
+    ["ShowParryEffect"] = false -- Default disabled
 }
 
 -- Variables
@@ -30,7 +31,7 @@ local PawsRemotes = ReplicatedStorage:WaitForChild("Remotes", 9e9)
 local PawsBalls = Workspace:WaitForChild("Balls", 9e9)
 local PawsTable = getgenv().Paws
 
--- Fonctions utilitaires
+-- Utility Functions
 local function IsTheTarget()
     return Player.Character and Player.Character:FindFirstChild("Highlight")
 end
@@ -48,7 +49,26 @@ local function SendMouseClick(spamDelay)
     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, spamDelay)
 end
 
--- Script principal de parry
+local function ShowParryEffect()
+    if not getgenv().Paws.ShowParryEffect then return end -- Only show effect if enabled
+
+    local effect = Instance.new("Part")
+    effect.Size = Vector3.new(1, 1, 1)
+    effect.Shape = Enum.PartType.Ball
+    effect.Color = Color3.fromRGB(0, 255, 0)
+    effect.Position = Player.Character.HumanoidRootPart.Position
+    effect.Anchored = true
+    effect.Transparency = 0.5
+    effect.Parent = Workspace
+
+    local tween = TweenService:Create(effect, TweenInfo.new(0.5), {Size = Vector3.new(5, 5, 5), Transparency = 1})
+    tween:Play()
+    tween.Completed:Connect(function()
+        effect:Destroy()
+    end)
+end
+
+-- Main Script for Parry
 local function AutoParryHandler()
     RunService.PreRender:Connect(function()
         if not FindBall() then return end
@@ -67,10 +87,11 @@ local function AutoParryHandler()
 
         if (Distance / BallVelocity) <= PawsTable.DistanceToParry and IsTheTarget() and PawsTable.AutoParry then
             SendMouseClick(PawsTable.SpamDelay)
+            ShowParryEffect() -- Trigger parry effect
         end
     end)
 
-    -- Gestion du spam automatique
+    -- Spam Handler
     task.spawn(function()
         while task.wait() do
             if getgenv().DetectSpam then
@@ -86,7 +107,7 @@ local function AutoParryHandler()
     end)
 end
 
--- UI
+-- UI Setup
 local Library_Window = Library.Add_Window("Auto Parry Settings")
 local Paws_Tab = Library_Window.Create_Tab({name = "Paws Parry", icon = "rbxassetid://6023426975"})
 local Paws_Section = Paws_Tab.Create_Section({name = "Auto Parry"})
@@ -97,7 +118,7 @@ Paws_Section.Create_Toggle({
     callback = function(state)
         getgenv().Paws.AutoParry = state
         if state then
-            AutoParryHandler() -- Active le script principal
+            AutoParryHandler()
         else
             warn("Auto-Parry disabled")
         end
@@ -145,13 +166,15 @@ Paws_Section.Create_Slider({
     end
 })
 
--- Effet visuel pour Parry
-local function ShowParryEffect()
-    local effect = Instance.new("Part")
-    effect.Size = Vector3.new(1, 1, 1)
-    effect.Shape = Enum.PartType.Ball
-    effect.Color = Color3.fromRGB(0, 255, 0)
-    effect.Position = Player.Character.HumanoidRootPart.Position
-    effect.Anchored = true
-    effect.Parent = Workspace
-    local tween = TweenService:Create(effect, TweenInfo.new(0.5), {Size = Vector3.new(5, 5, 5),
+Paws_Section.Create_Toggle({
+    name = "Show Parry Effect",
+    flag = "Show_Parry_Effect",
+    callback = function(state)
+        getgenv().Paws.ShowParryEffect = state
+        if state then
+            warn("Parry Effect Enabled")
+        else
+            warn("Parry Effect Disabled")
+        end
+    end
+})
