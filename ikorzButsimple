@@ -39,7 +39,7 @@ local local_player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local standalone = false
 print("-----------------")
-print("coded by fsploit")
+print("nigga code by ikorz skid bu frost)
 print("-----------------")
 
 --//OPTIONS
@@ -2361,7 +2361,7 @@ print("Hi")
         Rounding = 1,
         Callback = function(Value)
             workspace.Gravity = Value
-print("Hi")
+print("edit by ikorz or kiolaz or the cat fornite")
         end
     })
 
