@@ -1,73 +1,128 @@
-
 --[[
 	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
 ]]
--- Updated by Fsploit
-getgenv().Paws = {
-    ["AutoParry"] = true,
-    ["PingBased"] = true,
-    ["PingBasedOffset"] = 0,
-    ["DistanceToParry"] = 0.5,
-    ["BallSpeedCheck"] = true,
-    ["SpamDelay"] = 0.1, -- Delay between spam clicks
-}
-
+--[[
+Y'all better thank me or I cry XD
+]]--
 local Players = game:GetService("Players")
-local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local ReplicatedPaw = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local RunService = game:GetService("RunService")
+local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local Balls = workspace:WaitForChild("Balls", 9e9)
 
-local Paws = ReplicatedPaw:WaitForChild("Remotes", 9e9)
-local PawsBalls = workspace:WaitForChild("Balls", 9e9)
-local PawsTable = getgenv().Paws
-
-local function IsTheTarget()
-    return Player.Character:FindFirstChild("Highlight")
+local function get_player()
+    return Players.LocalPlayer
 end
 
-local function FindBall()
-    for _, v in pairs(PawsBalls:GetChildren()) do
-        if v:GetAttribute("realBall") == true then
+local function get_character()
+    local player = get_player()
+    return player and player.Character
+end
+
+local function get_humanoid_root_part()
+    local char = get_character()
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+local function get_humanoid()
+    local char = get_character()
+    return char and char:FindFirstChild("Humanoid")
+end
+
+local function get_ball()
+    local ballContainer = workspace:FindFirstChild("Balls")
+    if not ballContainer then return nil end
+
+    for _, v in pairs(ballContainer:GetChildren()) do
+        if not v.Anchored then
             return v
         end
     end
+    return nil
 end
 
-local function SendMouseClick(spamDelay)
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, spamDelay)
-    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, spamDelay)
+local function calculate_parry_distance()
+    local ball = get_ball()
+    if ball then
+        local ping = get_player():GetNetworkPing() * 20
+        return math.clamp(ball.Velocity.Magnitude / 2.4 + ping, 15, 200)
+    end
+    return 15
 end
 
-game:GetService("RunService").PreRender:Connect(function()
-    if not FindBall() then return end
+local visualise = true 
 
-    local Ball = FindBall()
-    local BallPosition = Ball.Position
-    local BallVelocity = Ball.AssemblyLinearVelocity.Magnitude
-    local Distance = Player:DistanceFromCharacter(BallPosition)
-    local Ping = BallVelocity * (game.Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 1000)
+local function create_visualizer()
+    local sphere = Instance.new("Part")
+    sphere.Shape = Enum.PartType.Ball
+    sphere.Anchored = true
+    sphere.CanCollide = false
+    sphere.CastShadow = false
+    sphere.Transparency = 1 
+    sphere.Material = Enum.Material.ForceField
+    sphere.Parent = workspace
 
-    if PawsTable.PingBased then
-        Distance -= Ping + PawsTable.PingBasedOffset
+    local hue = 0
+
+    local function update_visualizer()
+        if not visualise then
+            sphere.Transparency = 1
+            return
+        end
+
+        local humanoidRootPart = get_humanoid_root_part()
+        if not humanoidRootPart then
+            sphere.Transparency = 1
+            return
+        end
+
+        sphere.Transparency = 0.5
+        local parryDistance = calculate_parry_distance()
+        sphere.Size = Vector3.new(parryDistance * 2, parryDistance * 2, parryDistance * 2)
+        sphere.Position = humanoidRootPart.Position
+
+        hue = (hue + 0.01) % 1
+        sphere.Color = Color3.fromHSV(hue, 1, 1)
     end
 
-    if PawsTable.BallSpeedCheck and BallVelocity == 0 then return end
+    local function is_ball_within_visualizer(ball)
+        local humanoidRootPart = get_humanoid_root_part()
+        if not humanoidRootPart or not ball then
+            return false
+        end
 
-    if (Distance / BallVelocity) <= PawsTable.DistanceToParry and IsTheTarget() and PawsTable.AutoParry then
-        SendMouseClick(PawsTable.SpamDelay)
+        local distance = (humanoidRootPart.Position - ball.Position).Magnitude
+        return distance <= sphere.Size.X / 2
     end
-end)
 
-task.spawn(function()
-    while task.wait() do
-        if getgenv().DetectSpam then
-            local Ball = FindBall()
-            if Ball then
-                local TargetPlayer = Ball:GetAttribute("target")
-                if TargetPlayer == Player.Name or (Player.Character and Player.Character:FindFirstChild("Highlight")) then
-                    SendMouseClick(PawsTable.SpamDelay)
-                end
-            end
+-- Parry ahh fixed function XD
+    local function parry_if_valid(ball)
+        if ball and is_ball_within_visualizer(ball) and Player.Character:FindFirstChild("Highlight") then
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
         end
     end
-end)
+
+    local function monitor_visualizer()
+        RunService.RenderStepped:Connect(function()
+            update_visualizer()
+         
+            local ball = get_ball()
+            parry_if_valid(ball)
+        end)
+
+        local player = get_player()
+        if player then
+            player.CharacterAdded:Connect(function()
+                wait(0.1)
+                if visualise then
+                    update_visualizer()
+                end
+            end)
+        end
+    end
+
+    monitor_visualizer()
+end
+                    
+create_visualizer()
