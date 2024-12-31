@@ -1,3 +1,26 @@
+local whitelistedUserIds = {
+    12345678, -- user id madafak
+    87654321, -- extra for nigga
+}
+
+local player = game:GetService("Players").LocalPlayer
+
+local function isWhitelisted(userId)
+    for _, id in ipairs(whitelistedUserIds) do
+        if userId == id then
+            return true
+        end
+    end
+    return false
+end
+
+if not isWhitelisted(player.UserId) then
+    player:Kick("Not whitelisted.")
+end
+
+if _G.NiggaNiggaNiggaNiggaNiggaSkiddedSlidentAhhFuckMe == true then return end
+wait()
+_G.NiggaNiggaNiggaNiggaNiggaSkiddedSlidentAhhFuckMe = true
 repeat wait() until game:IsLoaded()
 local Stats = game:GetService("Stats")
 local Players = game:GetService("Players")
@@ -21,7 +44,7 @@ local local_player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local standalone = false
 print("-----------------")
-print("coded by ikorz")
+print("coded by fsploit")
 print("-----------------")
 
 --//OPTIONS
@@ -1703,8 +1726,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "ikorz,
-    SubTitle = "By Ikorz",
+    Title = "FROSTWARE [Jungle Event dsc.gg/GetFrost]",
+    SubTitle = "By fsploit",
     TabWidth = 150,
     Size = UDim2.fromOffset(500, 250),
     Acrylic = false,
@@ -1724,8 +1747,8 @@ local Tabs = {
 	local r = Tabs.Home:AddSection("Information")
 				    
 Tabs.Home:AddParagraph({
-        Title = "ikorz",
-        Content = [[Welcome to ikorz!
+        Title = "FROSTWARE",
+        Content = [[Welcome to Frostwarebh!
     - Fixed Parry
     - Fixed Spam
     - Fixed Manual Spam
@@ -1738,8 +1761,8 @@ Tabs.Home:AddParagraph({
 })
         
 Tabs.Home:AddParagraph({
-        Title = "Ikorz",
-        Content = [[This Script was Made By ikorz!]]
+        Title = "FROSTWARE",
+        Content = [[This Script was Made By Fsploit!]]
 })
         
 local qr = Tabs.Main:AddSection("Main")
@@ -2226,126 +2249,3 @@ local Slider = Hake:AddSlider("Slider", {
         Description = "This is for the Hacker mode on the Ai Play.",
         Default = 20,
         Min = 0,
-        Max = 300,
-        Rounding = 1,
-        Callback = function(Value)
-            AiPlaySpeed = Value
-        end
-    })
-
- 
-local Wrr = Tabs.World:AddSection("World")
-				    
- Wrr:AddButton({
-        Title = "Fps Boost",
-        Description = "Reduces Graphics and boosts your fps by alot",
-        Callback = function()
-                local decalsyeeted = true
-local g = game
-local w = g.Workspace
-local l = g.Lighting
-local t = w.Terrain
-t.WaterWaveSize = 0
-t.WaterWaveSpeed = 0
-t.WaterReflectance = 0
-t.WaterTransparency = 0
-l.GlobalShadows = false
-l.FogEnd = 9e9
-l.Brightness = 0
-settings().Rendering.QualityLevel = "Level01"
-for i, v in pairs(g:GetDescendants()) do
-    if v:IsA("Part") or v:IsA("Union") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
-        v.Material = "Plastic"
-        v.Reflectance = 0
-    elseif v:IsA("Decal") or v:IsA("Texture") and decalsyeeted then
-        v.Transparency = 1
-    elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-        v.Lifetime = NumberRange.new(0)
-    elseif v:IsA("Explosion") then
-        v.BlastPressure = 1
-        v.BlastRadius = 1
-    elseif v:IsA("Fire") or v:IsA("SpotLight") or v:IsA("Smoke") or v:IsA("Sparkles") then
-        v.Enabled = false
-    elseif v:IsA("MeshPart") then
-        v.Material = "Plastic"
-        v.Reflectance = 0
-        v.TextureID = 10385902758728957
-    end
-end
-for i, e in pairs(l:GetChildren()) do
-    if e:IsA("BlurEffect") or e:IsA("SunRaysEffect") or e:IsA("ColorCorrectionEffect") or e:IsA("BloomEffect") or e:IsA("DepthOfFieldEffect") then
-        e.Enabled = false
-    end
-end
-end})
-        
-local Toggle = Wrr:AddToggle("Config", {Title = "Night Mode", Description = "Toggles Night Mode", Default = false })
-Toggle:OnChanged(function(state)  
-    Nightmode = state 
-end) 
-        
-local Toggle = Wrr:AddToggle("Config", {Title = "Shaders", Description = "Toggles Shaders", Default = true })
-Toggle:OnChanged(function(state)  
-    ShadersEffect = state  
-end) 
-        
-        
-
- 
-            
-	
-local DDDD = Tabs.Config:AddSection("Player")
-				    
-local Slider = DDDD:AddSlider("Slider", {
-        Title = "Walk speed",
-        Description = "Edits the players walkspeed",
-        Default = 30,
-        Min = 0,
-        Max = 500,
-        Rounding = 1,
-        Callback = function(Value)
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-print("Hi")
-        end
-    })
-  local Slider = DDDD:AddSlider("Slider", {
-        Title = "Jump power",
-        Description = "Edits The player Jump Power",
-        Default = 40,
-        Min = 0,
-        Max = 500,
-        Rounding = 1,
-        Callback = function(Value)
-            game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-print("Hi")
-        end
-    })
-  local Slider = DDDD:AddSlider("Slider", {
-        Title = "FOV",
-        Description = "Edits the Camera Field of View [FOV]",
-        Default = 70,
-        Min = 0,
-        Max = 500,
-        Rounding = 1,
-        Callback = function(Value)
-            local FovNumber = Value
-local Camera = workspace.CurrentCamera
-Camera.FieldOfView = FovNumber
-print("Hi")
-        end
-    })
-  local Slider = DDDD:AddSlider("Slider", {
-        Title = "Gravity",
-        Description = "Edits your Gravity",
-        Default = 197,
-        Min = 0,
-        Max = 500,
-        Rounding = 1,
-        Callback = function(Value)
-            workspace.Gravity = Value
-print("Hi")
-        end
-    })
-
-        
-        
