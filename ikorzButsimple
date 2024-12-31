@@ -21,7 +21,7 @@ local local_player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local standalone = false
 print("-----------------")
-print("coded by fsploit")
+print("coded by ikorz")
 print("-----------------")
 
 --//OPTIONS
