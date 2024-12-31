@@ -1,21 +1,3 @@
-local player = game:GetService("Players").LocalPlayer
-
-local function isWhitelisted(userId)
-    for _, id in ipairs(whitelistedUserIds) do
-        if userId == id then
-            return true
-        end
-    end
-    return false
-end
-
-if not isWhitelisted(player.UserId) then
-    player:Kick("Not whitelisted.")
-end
-
-if _G.NiggaNiggaNiggaNiggaNiggaSkiddedSlidentAhhFuckMe == true then return end
-wait()
-_G.NiggaNiggaNiggaNiggaNiggaSkiddedSlidentAhhFuckMe = true
 repeat wait() until game:IsLoaded()
 local Stats = game:GetService("Stats")
 local Players = game:GetService("Players")
@@ -39,7 +21,7 @@ local local_player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local standalone = false
 print("-----------------")
-print("nigga code by ikorz skid bu frost)
+print("coded by fsploit")
 print("-----------------")
 
 --//OPTIONS
@@ -1721,8 +1703,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "FROSTWARE [Jungle Event dsc.gg/GetFrost]",
-    SubTitle = "By fsploit",
+    Title = "ikorz,
+    SubTitle = "By Ikorz",
     TabWidth = 150,
     Size = UDim2.fromOffset(500, 250),
     Acrylic = false,
@@ -1742,8 +1724,8 @@ local Tabs = {
 	local r = Tabs.Home:AddSection("Information")
 				    
 Tabs.Home:AddParagraph({
-        Title = "FROSTWARE",
-        Content = [[Welcome to Frostwarebh!
+        Title = "ikorz",
+        Content = [[Welcome to ikorz!
     - Fixed Parry
     - Fixed Spam
     - Fixed Manual Spam
@@ -1756,8 +1738,8 @@ Tabs.Home:AddParagraph({
 })
         
 Tabs.Home:AddParagraph({
-        Title = "FROSTWARE",
-        Content = [[This Script was Made By Fsploit!]]
+        Title = "Ikorz",
+        Content = [[This Script was Made By ikorz!]]
 })
         
 local qr = Tabs.Main:AddSection("Main")
@@ -2361,7 +2343,7 @@ print("Hi")
         Rounding = 1,
         Callback = function(Value)
             workspace.Gravity = Value
-print("edit by ikorz or kiolaz or the cat fornite")
+print("Hi")
         end
     })
 
