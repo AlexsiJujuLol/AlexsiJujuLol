@@ -1,92 +1,73 @@
 
-local parryEnabled = true 
-local parryDistance = 10
-local parryCooldown = 1   
-local lastParry = 0      
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- Updated by Fsploit
+getgenv().Paws = {
+    ["AutoParry"] = true,
+    ["PingBased"] = true,
+    ["PingBasedOffset"] = 0,
+    ["DistanceToParry"] = 0.5,
+    ["BallSpeedCheck"] = true,
+    ["SpamDelay"] = 0.1, -- Delay between spam clicks
+}
 
-function isAttackIncoming(enemy, player)
-    local distance = (enemy.Position - player.Position).Magnitude
-    return distance <= parryDistance
-end
-
-function autoParry(player)
-    if parryEnabled and (tick() - lastParry) >= parryCooldown then
-  else
-        print("Parried!") or print("false") if print("Parried") then print("ms..")
-  else
-    if toggled then
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
+local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local ReplicatedPaw = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-local BallFolder = Workspace:WaitForChild("Balls")
 
-local player = Players.LocalPlayer
-local canParry = true
+local Paws = ReplicatedPaw:WaitForChild("Remotes", 9e9)
+local PawsBalls = workspace:WaitForChild("Balls", 9e9)
+local PawsTable = getgenv().Paws
 
-local function calculatePredictionTime(ball, player)
-    local character = player.Character
-    if character then
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
-            local relativePosition = ball.Position - rootPart.Position
-            local relativeVelocity = ball.Velocity - rootPart.Velocity
-            local a = ball.Size.Magnitude / 1
-            local b = relativePosition.Magnitude
-            local c = math.sqrt(a * a + b * b)
-            return (c - a) / relativeVelocity.Magnitude
-        end
-    end
-    return math.huge
+local function IsTheTarget()
+    return Player.Character:FindFirstChild("Highlight")
 end
 
-local function parry()
-    if canParry then
-        canParry = false
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        task.delay(0.1, function()
-            canParry = true
-        end)
-    end
-end
-
-local function checkProximityToPlayer(ball, player)
-    local predictionTime = calculatePredictionTime(ball, player)
-    local realBallAttribute = ball:GetAttribute("realBall")
-    local target = ball:GetAttribute("target")
-
-    if predictionTime and realBallAttribute and target then
-        local ballSpeedThreshold = math.max(0.4, 0.6 - ball.Velocity.Magnitude * 0.03)
-        if predictionTime <= ballSpeedThreshold and realBallAttribute and target == player.Name then
-            parry()
+local function FindBall()
+    for _, v in pairs(PawsBalls:GetChildren()) do
+        if v:GetAttribute("realBall") == true then
+            return v
         end
     end
 end
 
-local function checkBallsProximity()
-    if player and player.Character then
-        for _, ball in ipairs(BallFolder:GetChildren()) do
-            if ball:IsA("BasePart") then
-                checkProximityToPlayer(ball, player)
+local function SendMouseClick(spamDelay)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, spamDelay)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, spamDelay)
+end
+
+game:GetService("RunService").PreRender:Connect(function()
+    if not FindBall() then return end
+
+    local Ball = FindBall()
+    local BallPosition = Ball.Position
+    local BallVelocity = Ball.AssemblyLinearVelocity.Magnitude
+    local Distance = Player:DistanceFromCharacter(BallPosition)
+    local Ping = BallVelocity * (game.Stats.Network.ServerStatsItem["Data Ping"]:GetValue() / 1000)
+
+    if PawsTable.PingBased then
+        Distance -= Ping + PawsTable.PingBasedOffset
+    end
+
+    if PawsTable.BallSpeedCheck and BallVelocity == 0 then return end
+
+    if (Distance / BallVelocity) <= PawsTable.DistanceToParry and IsTheTarget() and PawsTable.AutoParry then
+        SendMouseClick(PawsTable.SpamDelay)
+    end
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if getgenv().DetectSpam then
+            local Ball = FindBall()
+            if Ball then
+                local TargetPlayer = Ball:GetAttribute("target")
+                if TargetPlayer == Player.Name or (Player.Character and Player.Character:FindFirstChild("Highlight")) then
+                    SendMouseClick(PawsTable.SpamDelay)
+                end
             end
         end
     end
-end
-
-RunService.Heartbeat:Connect(checkBallsProximity)
-        lastParry = tick()
-    end
-end
-
-while true do
-    local player = game.Players.LocalPlayer.Character
-    local enemies = game.Workspace.Enemies:GetChildren()
-
-    for _, enemy in ipairs(enemies) do
-        if isAttackIncoming(enemy, player) then
-            autoParry(player)
-        end
-    end    
-    wait(0.1) 
-end
+end)
