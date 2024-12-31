@@ -1,5 +1,5 @@
 local whitelistedUserIds = {
-    12345678, -- user id madafak
+    Kurostra1234, -- user id madafak
     87654321, -- extra for nigga
 }
 
@@ -44,7 +44,7 @@ local local_player = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local standalone = false
 print("-----------------")
-print("coded by fsploit")
+print("")
 print("-----------------")
 
 --//OPTIONS
