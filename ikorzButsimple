@@ -3,6 +3,8 @@ local Players = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local Player = Players.LocalPlayer
 
+local Ikorz = loadstring(game:HttpGet("https://github.com/dawid-scripts/Ikorz/releases/latest/download/main.lua"))()
+
 local AutoParryEnabled = true
 local ReactionTime = 0.3
 local DetectionRange = 100
@@ -48,16 +50,16 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local Window = Fluent:CreateWindow({
-    Title = "ikorz - Auto Parry",
-    SubTitle = "by ikorz bitch",
+local Window = Ikorz:CreateWindow({
+    Title = "Ikorz UI - Auto Parry",
+    SubTitle = "Customize Features",
     Size = UDim2.fromOffset(580, 460),
     Theme = "Dark",
 })
 
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Main = Window:AddTab({ Title = "Main" }),
+    Settings = Window:AddTab({ Title = "Settings" }),
 }
 
 local AutoParryToggle = Tabs.Main:AddToggle("AutoParryToggle", {
@@ -65,12 +67,13 @@ local AutoParryToggle = Tabs.Main:AddToggle("AutoParryToggle", {
     Default = AutoParryEnabled,
     Callback = function(Value)
         AutoParryEnabled = Value
+        print("Auto Parry Enabled:", AutoParryEnabled)
     end,
 })
 
-Fluent:Notify({
-    Title = "Auto Parry Script",
-    Content = "The script has been successfully loaded.",
+Ikorz:Notify({
+    Title = "Ikorz UI",
+    Content = "The UI and Auto Parry have been loaded successfully.",
     Duration = 5,
 })
 
