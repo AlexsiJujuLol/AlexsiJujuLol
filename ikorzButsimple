@@ -1,40 +1,47 @@
+-- Ensure Byte library is loaded correctly
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
+
+-- Create the main window
+local Window = Library.Add_Window('Auto Parry')
+
+-- Create a Main Tab
+local MainTab = Window.Create_Tab({
+    name = 'Main',
+    icon = 'rbxassetid://1234567890'  -- Change to a valid icon if needed
+})
+
+-- Create a Section in the Main Tab for Auto Parry Toggle
+local MainSection = MainTab.Create_Section({
+    name = 'Auto Parry Features'
+})
+
+-- Define the Auto Parry Toggle
+local AutoParryToggle = MainSection.Create_Toggle({
+    name = 'Enable Auto Parry',
+    section = 'left',  -- Ensure it's placed in the left section
+    default = false,   -- Default to false (off)
+    callback = function(state)
+        if state then
+            print("Auto Parry Enabled")
+        else
+            print("Auto Parry Disabled")
+        end
+    end
+})
+
+-- Variables for Auto Parry
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local Player = Players.LocalPlayer
 
--- Auto Parry configuration
-local AutoParryEnabled = false  -- Default state for Auto Parry
-local ReactionTime = 0.2       -- Faster reaction time for close-range combat
-local DetectionRange = 50      -- Shorter detection range for close-range
+local AutoParryEnabled = false  -- Default Auto Parry state
+local ReactionTime = 0.2       -- Reaction time for close-range
+local DetectionRange = 50      -- Detection range for the parry
 local Cooldown = tick()
 local Parried = false
 
--- Load Byte library for UI (Make sure this URL is valid)
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua"))()
-
--- Create UI Window and Tabs
-local Window = Library.Add_Window("Auto Parry")
-local MainTab = Window.Create_Tab({ name = "Main" })
-local SettingsTab = Window.Create_Tab({ name = "Settings" })
-
--- Add Section for Auto Parry Toggle
-local MainSection = MainTab.Create_Section({ name = "Features" })
-local AutoParryToggle = MainSection.Create_Toggle({
-    name = "Enable Auto Parry",
-    section = "left",
-    default = false,
-    callback = function(state)
-        AutoParryEnabled = state  -- Update the Auto Parry state when the toggle is changed
-        if AutoParryEnabled then
-            print("Auto Parry Enabled")
-        else
-            print("Auto Parry Disabled")
-        end
-    end,
-})
-
--- Ball Detection Function
+-- Function to get the closest ball
 local function GetClosestBall()
     local closestBall, closestDistance = nil, math.huge
     for _, Ball in ipairs(workspace.Balls:GetChildren()) do
@@ -52,38 +59,37 @@ local function GetClosestBall()
     return closestBall
 end
 
--- Auto Parry Logic with Close Range Settings
+-- Auto Parry Logic
 RunService.Heartbeat:Connect(function()
-    if not AutoParryEnabled then return end  -- If Auto Parry is not enabled, stop the function
+    if not AutoParryEnabled then return end  -- If Auto Parry is off, do nothing
 
-    -- Use the close-range settings
-    ReactionTime = 0.2  -- Faster reaction time for close-range
-    DetectionRange = 50  -- Close range detection for better reaction times
+    -- Adjust settings for close-range
+    ReactionTime = 0.2
+    DetectionRange = 50
 
     local Ball = GetClosestBall()
     local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-    if not Ball or not HRP then return end  -- If there is no ball or HumanoidRootPart, return
+    if not Ball or not HRP then return end
 
     local BallVelocity = Ball.Velocity.Magnitude
     local Distance = (HRP.Position - Ball.Position).Magnitude
     local TimeToReach = Distance / BallVelocity
 
-    -- Auto Parry: If the ball is within range and reaches the player in time, simulate a parry
     if Ball:GetAttribute("target") == Player.Name and not Parried and Distance <= DetectionRange and TimeToReach <= ReactionTime then
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)  -- Simulate mouse button press (parry action)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)  -- Simulate a mouse click to parry
         Parried = true
         Cooldown = tick()
     end
 
-    -- Reset parry status after cooldown
+    -- Reset parried status after cooldown
     if (tick() - Cooldown) >= 0.2 then
         Parried = false
     end
 end)
 
--- Notify the User
+-- Notification to user when UI is loaded
 Library.Notify({
     Title = "Auto Parry",
     Content = "UI Loaded. Toggle Auto Parry to enable/disable.",
-    Duration = 5,
+    Duration = 5
 })
