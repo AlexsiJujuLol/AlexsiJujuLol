@@ -1,103 +1,77 @@
-local Ikorz = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
-
-local Window = Ikorz:CreateWindow({
-    Title = "Ikorz",
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = false,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
-    BladeBal = Window:AddTab({ Title = "Blade Bal", Icon = "sword" }),
-    BloxFruits = Window:AddTab({ Title = "Blox Fruits", Icon = "fruit" })
-}
-
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local Player = Players.LocalPlayer
 
-local AutoFarmEnabled = false
-local SelectedWeapon = "Melee"
-local WeaponTypes = { "Melee", "Sword", "Gun" }
-local AutoFarmDelay = 0.1
+local AutoParryEnabled = true
+local ReactionTime = 0.3
+local DetectionRange = 100
+local Cooldown = tick()
+local Parried = false
 
-local function EquipWeapon(weapon)
-    for _, Tool in pairs(Player.Backpack:GetChildren()) do
-        if Tool.Name == weapon then
-            Player.Character.Humanoid:EquipTool(Tool)
-            break
-        end
-    end
-end
-
-local function AntiKick()
-    while AutoFarmEnabled do
-        -- Simple method to prevent kick from inactivity
-        local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-        if HRP then
-            -- Just moving the character slightly to avoid inactivity kick
-            HRP.CFrame = HRP.CFrame * CFrame.new(0, 0, 0.1)
-        end
-        wait(2)  -- Every 2 seconds, slightly move to avoid kick
-    end
-end
-
-local function AutoFarm()
-    while AutoFarmEnabled do
-        local NearestEnemy = nil
-        local NearestDistance = math.huge
-
-        for _, Enemy in pairs(Workspace.Enemies:GetChildren()) do
-            if Enemy:FindFirstChild("HumanoidRootPart") and Enemy:FindFirstChild("Humanoid") and Enemy.Humanoid.Health > 0 then
-                local Distance = (Player.Character.HumanoidRootPart.Position - Enemy.HumanoidRootPart.Position).Magnitude
-                if Distance < NearestDistance then
-                    NearestDistance = Distance
-                    NearestEnemy = Enemy
+local function GetClosestBall()
+    local closestBall, closestDistance = nil, math.huge
+    for _, Ball in ipairs(workspace.Balls:GetChildren()) do
+        if Ball:GetAttribute("realBall") then
+            local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+            if HRP then
+                local Distance = (HRP.Position - Ball.Position).Magnitude
+                if Distance < closestDistance then
+                    closestDistance = Distance
+                    closestBall = Ball
                 end
             end
         end
-
-        if NearestEnemy then
-            EquipWeapon(SelectedWeapon)
-            Player.Character.HumanoidRootPart.CFrame = NearestEnemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
-        end
-        wait(AutoFarmDelay)
     end
+    return closestBall
 end
 
-local AutoFarmToggle = Tabs.BloxFruits:AddToggle("AutoFarmToggle", { Title = "Auto Farm", Default = false })
+RunService.Heartbeat:Connect(function()
+    if not AutoParryEnabled then return end
 
-AutoFarmToggle:OnChanged(function()
-    AutoFarmEnabled = AutoFarmToggle.Value
-    if AutoFarmEnabled then
-        coroutine.wrap(AntiKick)()  -- Start anti-kick prevention
-        coroutine.wrap(AutoFarm)()  -- Start the auto farm loop
+    local Ball = GetClosestBall()
+    local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    if not Ball or not HRP then return end
+
+    local BallVelocity = Ball.Velocity.Magnitude
+    local Distance = (HRP.Position - Ball.Position).Magnitude
+    local TimeToReach = Distance / BallVelocity
+
+    if Ball:GetAttribute("target") == Player.Name and not Parried and Distance <= DetectionRange and TimeToReach <= ReactionTime then
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+        Parried = true
+        Cooldown = tick()
+    end
+
+    if (tick() - Cooldown) >= 0.2 then
+        Parried = false
     end
 end)
 
-local WeaponDropdown = Tabs.BloxFruits:AddDropdown("WeaponDropdown", {
-    Title = "Select Weapon",
-    Values = WeaponTypes,
-    Default = SelectedWeapon,
-    Multi = false
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Window = Fluent:CreateWindow({
+    Title = "ikorz - Auto Parry",
+    SubTitle = "by ikorz bitch",
+    Size = UDim2.fromOffset(580, 460),
+    Theme = "Dark",
 })
 
-WeaponDropdown:OnChanged(function(value)
-    SelectedWeapon = value
-end)
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+}
 
-Ikorz:Notify({
-    Title = "Ikorz",
-    Content = "Auto Farm Script Loaded Successfully!",
-    Duration = 8
+local AutoParryToggle = Tabs.Main:AddToggle("AutoParryToggle", {
+    Title = "Enable Auto Parry",
+    Default = AutoParryEnabled,
+    Callback = function(Value)
+        AutoParryEnabled = Value
+    end,
 })
+
+Fluent:Notify({
+    Title = "Auto Parry Script",
+    Content = "The script has been successfully loaded.",
+    Duration = 5,
+})
+
+Window:SelectTab(1)
