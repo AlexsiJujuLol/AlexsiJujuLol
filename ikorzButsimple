@@ -1,16 +1,29 @@
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua'))()
+
+local Library_Window = Library.Add_Window('Acceptions')
+
+-- Create Main Tab
+local Main_Tab = Library_Window.Create_Tab({
+    name = 'Main',
+    icon = 'rbxassetid://'
+})
+
+-- Create Main Section
+local Main_Section = Main_Tab.Create_Section()
+
+-- Variables for Auto Parry Logic
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local Player = Players.LocalPlayer
 
-local Ikorz = loadstring(game:HttpGet("https://github.com/dawid-scripts/Ikorz/releases/latest/download/main.lua"))()
-
-local AutoParryEnabled = true
+local AutoParryEnabled = false
 local ReactionTime = 0.3
 local DetectionRange = 100
 local Cooldown = tick()
 local Parried = false
 
+-- Function to Find Closest Ball
 local function GetClosestBall()
     local closestBall, closestDistance = nil, math.huge
     for _, Ball in ipairs(workspace.Balls:GetChildren()) do
@@ -28,6 +41,18 @@ local function GetClosestBall()
     return closestBall
 end
 
+-- Auto Parry Toggle in UI
+local Auto_Parry = Main_Section.Create_Toggle({
+    name = 'Auto Parry',
+    section = 'left',
+    flag = 'Auto_Parry',
+    callback = function(state)
+        AutoParryEnabled = state
+        print('Auto Parry Enabled:', AutoParryEnabled)
+    end
+})
+
+-- Auto Parry Logic
 RunService.Heartbeat:Connect(function()
     if not AutoParryEnabled then return end
 
@@ -49,32 +74,3 @@ RunService.Heartbeat:Connect(function()
         Parried = false
     end
 end)
-
-local Window = Ikorz:CreateWindow({
-    Title = "Ikorz UI - Auto Parry",
-    SubTitle = "Customize Features",
-    Size = UDim2.fromOffset(580, 460),
-    Theme = "Dark",
-})
-
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main" }),
-    Settings = Window:AddTab({ Title = "Settings" }),
-}
-
-local AutoParryToggle = Tabs.Main:AddToggle("AutoParryToggle", {
-    Title = "Enable Auto Parry",
-    Default = AutoParryEnabled,
-    Callback = function(Value)
-        AutoParryEnabled = Value
-        print("Auto Parry Enabled:", AutoParryEnabled)
-    end,
-})
-
-Ikorz:Notify({
-    Title = "Ikorz UI",
-    Content = "The UI and Auto Parry have been loaded successfully.",
-    Duration = 5,
-})
-
-Window:SelectTab(1)
