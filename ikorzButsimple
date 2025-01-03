@@ -9,7 +9,7 @@ local DetectionRange = 50      -- Shorter detection range for close-range
 local Cooldown = tick()
 local Parried = false
 
--- UI Library
+-- Load Byte library for UI
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/LuauCloud/Byte/refs/heads/main/Utils/Library.lua"))()
 
 -- Create UI Window and Tabs
@@ -28,12 +28,6 @@ local AutoParryToggle = MainSection.Create_Toggle({
         print("Auto Parry Enabled:", state)
     end,
 })
-
--- Best settings for close-range combat
-local CloseRangeSettings = {
-    ReactionTime = 0.2,  -- Faster reaction time
-    DetectionRange = 50  -- Close range detection
-}
 
 -- Ball Detection Function
 local function GetClosestBall()
@@ -58,8 +52,8 @@ RunService.Heartbeat:Connect(function()
     if not AutoParryEnabled then return end
 
     -- Use the close range settings
-    ReactionTime = CloseRangeSettings.ReactionTime
-    DetectionRange = CloseRangeSettings.DetectionRange
+    ReactionTime = 0.2  -- Faster reaction time
+    DetectionRange = 50  -- Close range detection
 
     local Ball = GetClosestBall()
     local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
