@@ -1,31 +1,44 @@
-local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local RunService = game:GetService("RunService")
-local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local Balls = workspace:WaitForChild("Balls", 9e9)
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/main/Library.lua'))()
+local Window = Fluent:CreateWindow({
+    Title = "Fluent " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true, 
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl 
+})
 
-local Window = Library.CreateWindow("Auto Parry")  -- Correct UI window creation
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
 
-local MainTab = Window:CreateTab({ name = "Main" })
-
-local MainSection = MainTab:CreateSection({ name = "Auto Parry Settings" })
+local Options = Fluent.Options
 
 local AutoParryEnabled = false
 
-MainSection:CreateToggle({
-    name = "Enable Auto Parry",
-    default = false,
-    callback = function(state)
-        AutoParryEnabled = state
-        if state then
-            print("Auto Parry Enabled")
-        else
-            print("Auto Parry Disabled")
-        end
-    end
+local AutoParryToggle = Tabs.Settings:AddToggle("AutoParryToggle", {
+    Title = "Enable Auto Parry",
+    Default = false
 })
+
+AutoParryToggle:OnChanged(function(state)
+    AutoParryEnabled = state
+    if state then
+        print("Auto Parry Enabled")
+    else
+        print("Auto Parry Disabled")
+    end
+end)
+
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local RunService = game:GetService("RunService")
+local Player = Players.LocalPlayer
 
 local function get_player()
     return Players.LocalPlayer
@@ -62,14 +75,6 @@ local function calculate_parry_distance()
     return 15
 end
 
-local function parry_if_valid(ball)
-    local humanoidRootPart = get_humanoid_root_part()
-    if ball and humanoidRootPart and (humanoidRootPart.Position - ball.Position).Magnitude <= calculate_parry_distance() then
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-    end
-end
-
 local function create_visualizer()
     local sphere = Instance.new("Part")
     sphere.Shape = Enum.PartType.Ball
@@ -103,6 +108,23 @@ local function create_visualizer()
         sphere.Color = Color3.fromHSV(hue, 1, 1)
     end
 
+    local function is_ball_within_visualizer(ball)
+        local humanoidRootPart = get_humanoid_root_part()
+        if not humanoidRootPart or not ball then
+            return false
+        end
+
+        local distance = (humanoidRootPart.Position - ball.Position).Magnitude
+        return distance <= sphere.Size.X / 2
+    end
+
+    local function parry_if_valid(ball)
+        if ball and is_ball_within_visualizer(ball) and Player.Character:FindFirstChild("Highlight") then
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+        end
+    end
+
     RunService.RenderStepped:Connect(function()
         if AutoParryEnabled then
             local ball = get_ball()
@@ -114,8 +136,21 @@ end
 
 create_visualizer()
 
-Library.Notify({
-    Title = "Auto Parry",
-    Content = "UI Loaded. Use the toggle to enable or disable Auto Parry.",
-    Duration = 5
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FluentScriptHub")
+SaveManager:SetFolder("FluentScriptHub/specific-game")
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+Window:SelectTab(1)
+
+Fluent:Notify({
+    Title = "Fluent",
+    Content = "The script has been loaded.",
+    Duration = 8
 })
+
+SaveManager:LoadAutoloadConfig()
