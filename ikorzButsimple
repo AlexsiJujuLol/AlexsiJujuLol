@@ -4,6 +4,29 @@ local RunService = game:GetService("RunService")
 local Player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local Balls = workspace:WaitForChild("Balls", 9e9)
 
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/main/Library.lua'))()
+
+local Window = Library.Add_Window("Auto Parry")
+
+local MainTab = Window.Create_Tab({ name = "Main" })
+
+local MainSection = MainTab.Create_Section({ name = "Auto Parry Settings" })
+
+local AutoParryEnabled = false
+
+MainSection.Create_Toggle({
+    name = "Enable Auto Parry",
+    default = false,
+    callback = function(state)
+        AutoParryEnabled = state
+        if state then
+            print("Auto Parry Enabled")
+        else
+            print("Auto Parry Disabled")
+        end
+    end
+})
+
 local function get_player()
     return Players.LocalPlayer
 end
@@ -16,11 +39,6 @@ end
 local function get_humanoid_root_part()
     local char = get_character()
     return char and char:FindFirstChild("HumanoidRootPart")
-end
-
-local function get_humanoid()
-    local char = get_character()
-    return char and char:FindFirstChild("Humanoid")
 end
 
 local function get_ball()
@@ -44,7 +62,13 @@ local function calculate_parry_distance()
     return 15
 end
 
-local visualise = true 
+local function parry_if_valid(ball)
+    local humanoidRootPart = get_humanoid_root_part()
+    if ball and humanoidRootPart and (humanoidRootPart.Position - ball.Position).Magnitude <= calculate_parry_distance() then
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+    end
+end
 
 local function create_visualizer()
     local sphere = Instance.new("Part")
@@ -52,14 +76,14 @@ local function create_visualizer()
     sphere.Anchored = true
     sphere.CanCollide = false
     sphere.CastShadow = false
-    sphere.Transparency = 1 
+    sphere.Transparency = 1
     sphere.Material = Enum.Material.ForceField
     sphere.Parent = workspace
 
     local hue = 0
 
     local function update_visualizer()
-        if not visualise then
+        if not AutoParryEnabled then
             sphere.Transparency = 1
             return
         end
@@ -79,43 +103,19 @@ local function create_visualizer()
         sphere.Color = Color3.fromHSV(hue, 1, 1)
     end
 
-    local function is_ball_within_visualizer(ball)
-        local humanoidRootPart = get_humanoid_root_part()
-        if not humanoidRootPart or not ball then
-            return false
-        end
-
-        local distance = (humanoidRootPart.Position - ball.Position).Magnitude
-        return distance <= sphere.Size.X / 2
-    end
-
-    local function parry_if_valid(ball)
-        if ball and is_ball_within_visualizer(ball) and Player.Character:FindFirstChild("Highlight") then
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        end
-    end
-
-    local function monitor_visualizer()
-        RunService.RenderStepped:Connect(function()
-            update_visualizer()
-         
+    RunService.RenderStepped:Connect(function()
+        if AutoParryEnabled then
             local ball = get_ball()
+            update_visualizer()
             parry_if_valid(ball)
-        end)
-
-        local player = get_player()
-        if player then
-            player.CharacterAdded:Connect(function()
-                wait(0.1)
-                if visualise then
-                    update_visualizer()
-                end
-            end)
         end
-    end
-
-    monitor_visualizer()
+    end)
 end
-                    
+
 create_visualizer()
+
+Library.Notify({
+    Title = "Auto Parry",
+    Content = "UI Loaded. Use the toggle to enable or disable Auto Parry.",
+    Duration = 5
+})
