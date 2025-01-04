@@ -6,15 +6,15 @@ local Balls = workspace:WaitForChild("Balls", 9e9)
 
 local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/LuauCloud/Byte/main/Library.lua'))()
 
-local Window = Library.Add_Window("Auto Parry")
+local Window = Library.CreateWindow("Auto Parry")  -- Correct UI window creation
 
-local MainTab = Window.Create_Tab({ name = "Main" })
+local MainTab = Window:CreateTab({ name = "Main" })
 
-local MainSection = MainTab.Create_Section({ name = "Auto Parry Settings" })
+local MainSection = MainTab:CreateSection({ name = "Auto Parry Settings" })
 
 local AutoParryEnabled = false
 
-MainSection.Create_Toggle({
+MainSection:CreateToggle({
     name = "Enable Auto Parry",
     default = false,
     callback = function(state)
