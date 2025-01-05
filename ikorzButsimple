@@ -1,13 +1,7 @@
-local ikorz = loadstring(game:HttpGet("https://[Log in to view URL]"))()
-local SaveManager = loadstring(game:HttpGet("https://[Log in to view URL]"))()
-local InterfaceManager = loadstring(game:HttpGet("https://[Log in to view URL]"))()
-
-local RunService = game:GetService("RunService")
-local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local Player = Players.LocalPlayer
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
 local AutoParryEnabled = true
+local AutoParrySpamEnabled = false -- Auto spam toggle
 local VisualEnabled = true
 local ReactionTime = 0.35
 local DetectionRange = 50
@@ -15,6 +9,7 @@ local CooldownTime = 0.15
 local Parried = false
 local LastParryTime = 0
 
+-- Parry Ring for main parry visualization
 local ParryRing = Drawing.new("Circle")
 ParryRing.Visible = false
 ParryRing.Color = Color3.fromRGB(255, 0, 0)
@@ -22,9 +17,204 @@ ParryRing.Transparency = 0.5
 ParryRing.Thickness = 2
 ParryRing.Filled = false
 
+-- Ball Visual (perfect circle on the ball)
+local BallVisual = Drawing.new("Circle")
+BallVisual.Visible = false
+BallVisual.Color = Color3.fromRGB(0, 0, 255) -- Default blue for the ball
+BallVisual.Thickness = 2
+BallVisual.Transparency = 0.5
+BallVisual.Filled = true
+
+-- Visual Ring for auto parry area
+local VisualRing = Drawing.new("Circle")
+VisualRing.Visible = true
+VisualRing.Color = Color3.fromRGB(255, 0, 0)
+VisualRing.Thickness = 2
+VisualRing.Transparency = 0.5
+VisualRing.Filled = false
+VisualRing.Radius = DetectionRange
+
+local Window = OrionLib:MakeWindow({
+    Name = "Orion Auto Parry Script",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "OrionParryConfig"
+})
+
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MainTab:AddToggle({
+    Name = "Enable Auto Parry",
+    Default = true,
+    Callback = function(value)
+        AutoParryEnabled = value
+        OrionLib:MakeNotification({
+            Name = "Auto Parry",
+            Content = value and "Enabled" or "Disabled",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+    end
+})
+
+MainTab:AddToggle({
+    Name = "Enable Auto Parry Spam",
+    Default = false,
+    Callback = function(value)
+        AutoParrySpamEnabled = value
+        OrionLib:MakeNotification({
+            Name = "Auto Parry Spam",
+            Content = value and "Enabled" or "Disabled",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+    end
+})
+
+MainTab:AddToggle({
+    Name = "Enable Visual Parry Ring",
+    Default = true,
+    Callback = function(value)
+        VisualEnabled = value
+        OrionLib:MakeNotification({
+            Name = "Visuals",
+            Content = value and "Enabled" or "Disabled",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+    end
+})
+
+local SettingsTab = Window:MakeTab({
+    Name = "Settings",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Button for Reaction Time input (mobile-friendly)
+SettingsTab:AddButton({
+    Name = "Set Reaction Time (0.1 to 1.0 seconds)",
+    Callback = function()
+        -- Create a prompt asking the user for a new reaction time
+        local userInput = OrionLib:PromptInput({
+            Title = "Set Reaction Time",
+            Text = "Enter a value between 0.1 and 1.0 seconds",
+            Default = tostring(ReactionTime)
+        })
+
+        if userInput then
+            local newTime = tonumber(userInput)
+            if newTime and newTime >= 0.1 and newTime <= 1.0 then
+                ReactionTime = newTime
+                OrionLib:MakeNotification({
+                    Name = "Reaction Time Updated",
+                    Content = "New value: " .. tostring(newTime) .. " seconds",
+                    Image = "rbxassetid://4483345998",
+                    Time = 3
+                })
+            else
+                OrionLib:MakeNotification({
+                    Name = "Invalid Input",
+                    Content = "Please enter a valid number between 0.1 and 1.0",
+                    Image = "rbxassetid://4483345998",
+                    Time = 3
+                })
+            end
+        end
+    end
+})
+
+-- Button for Detection Range input (mobile-friendly)
+SettingsTab:AddButton({
+    Name = "Set Detection Range (10 to 100 studs)",
+    Callback = function()
+        -- Create a prompt asking the user for a new detection range
+        local userInput = OrionLib:PromptInput({
+            Title = "Set Detection Range",
+            Text = "Enter a value between 10 and 100 studs",
+            Default = tostring(DetectionRange)
+        })
+
+        if userInput then
+            local newRange = tonumber(userInput)
+            if newRange and newRange >= 10 and newRange <= 100 then
+                DetectionRange = newRange
+                VisualRing.Radius = DetectionRange
+                OrionLib:MakeNotification({
+                    Name = "Detection Range Updated",
+                    Content = "New value: " .. tostring(newRange) .. " studs",
+                    Image = "rbxassetid://4483345998",
+                    Time = 3
+                })
+            else
+                OrionLib:MakeNotification({
+                    Name = "Invalid Input",
+                    Content = "Please enter a valid number between 10 and 100",
+                    Image = "rbxassetid://4483345998",
+                    Time = 3
+                })
+            end
+        end
+    end
+})
+
+-- Button for Parry Delay input (mobile-friendly)
+SettingsTab:AddButton({
+    Name = "Set Parry Delay (0.1 to 1.0 seconds)",
+    Callback = function()
+        -- Create a prompt asking the user for a new parry delay
+        local userInput = OrionLib:PromptInput({
+            Title = "Set Parry Delay",
+            Text = "Enter a value between 0.1 and 1.0 seconds",
+            Default = tostring(CooldownTime)
+        })
+
+        if userInput then
+            local newDelay = tonumber(userInput)
+            if newDelay and newDelay >= 0.1 and newDelay <= 1.0 then
+                CooldownTime = newDelay
+                OrionLib:MakeNotification({
+                    Name = "Parry Delay Updated",
+                    Content = "New value: " .. tostring(newDelay) .. " seconds",
+                    Image = "rbxassetid://4483345998",
+                    Time = 3
+                })
+            else
+                OrionLib:MakeNotification({
+                    Name = "Invalid Input",
+                    Content = "Please enter a valid number between 0.1 and 1.0",
+                    Image = "rbxassetid://4483345998",
+                    Time = 3
+                })
+            end
+        end
+    end
+})
+
+OrionLib:MakeNotification({
+    Name = "Script Loaded",
+    Content = "Orion Auto Parry script loaded successfully!",
+    Image = "rbxassetid://4483345998",
+    Time = 5
+})
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Player = Players.LocalPlayer
+
 local function GetClosestBall()
     local closestBall, closestDistance = nil, math.huge
-    for _, Ball in ipairs(workspace.Balls:GetChildren()) do
+    local BallsFolder = workspace:FindFirstChild("Balls")
+    if not BallsFolder then
+        return nil
+    end
+
+    for _, Ball in ipairs(BallsFolder:GetChildren()) do
         if Ball:GetAttribute("realBall") then
             local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
             if HRP then
@@ -39,7 +229,25 @@ local function GetClosestBall()
     return closestBall
 end
 
-RunService.Heartbeat:Connect(function()
+RunService.RenderStepped:Connect(function()
+    local Character = Player.Character
+    if Character then
+        local HRP = Character:FindFirstChild("HumanoidRootPart")
+        if HRP then
+            local ScreenPos, OnScreen = workspace.CurrentCamera:WorldToViewportPoint(HRP.Position)
+            if OnScreen then
+                VisualRing.Position = Vector2.new(ScreenPos.X, ScreenPos.Y)
+                VisualRing.Visible = VisualEnabled
+            else
+                VisualRing.Visible = false
+            end
+        else
+            VisualRing.Visible = false
+        end
+    else
+        VisualRing.Visible = false
+    end
+
     if not AutoParryEnabled and not VisualEnabled then
         ParryRing.Visible = false
         return
@@ -56,6 +264,11 @@ RunService.Heartbeat:Connect(function()
         return
     end
 
+    -- Ball Visual: Show the ball with a circle, turn green when it's time to parry
+    BallVisual.Position = workspace.CurrentCamera:WorldToViewportPoint(Ball.Position)
+    BallVisual.Visible = VisualEnabled
+    BallVisual.Color = (Ball:GetAttribute("target") == Player.Name) and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 255) -- Green when it's time to parry
+
     local BallVelocity = Ball.Velocity.Magnitude
     local Distance = (HRP.Position - Ball.Position).Magnitude
     local TimeToReach = Distance / BallVelocity
@@ -67,11 +280,20 @@ RunService.Heartbeat:Connect(function()
 
     local AdaptiveReactionTime = ReactionTime + math.clamp((BallVelocity / 100), 0, 0.1)
 
+    -- Auto Parry logic
     if Ball:GetAttribute("target") == Player.Name and not Parried and Distance <= DetectionRange and TimeToReach <= AdaptiveReactionTime then
         if AutoParryEnabled and (tick() - LastParryTime) >= CooldownTime then
             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
             Parried = true
             LastParryTime = tick()
+
+            -- Auto Parry Spam logic
+            if AutoParrySpamEnabled then
+                while AutoParrySpamEnabled and Ball:GetAttribute("target") == Player.Name do
+                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                    wait(CooldownTime / 2) -- Adjust spam rate
+                end
+            end
         end
     end
 
@@ -79,49 +301,3 @@ RunService.Heartbeat:Connect(function()
         Parried = false
     end
 end)
-
-local Window = ikorz:CreateWindow({
-    Title = "ikorz " .. ikorz.Version,
-    SubTitle = "by dawid",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
-
-local ToggleAutoParry = Tabs.Main:AddToggle("AutoParryToggle", {
-    Title = "Toggle Auto Parry",
-    Default = true
-})
-
-ToggleAutoParry:OnChanged(function()
-    AutoParryEnabled = ToggleAutoParry.Value
-    print("Auto Parry:", AutoParryEnabled and "Enabled" or "Disabled")
-end)
-
-local ToggleVisual = Tabs.Main:AddToggle("VisualToggle", {
-    Title = "Toggle Visual",
-    Default = true
-})
-
-ToggleVisual:OnChanged(function()
-    VisualEnabled = ToggleVisual.Value
-    print("Visual:", VisualEnabled and "Enabled" or "Disabled")
-end)
-
-local SaveManager = loadstring(game:HttpGet("https://[Log in to view URL]"))()
-SaveManager:SetLibrary(ikorz)
-SaveManager:IgnoreThemeSettings()
-SaveManager:BuildConfigSection(Tabs.Settings)
-
-ikorz:Notify({
-    Title = "ikorz",
-    Content = "Script Loaded Successfully!",
-    Duration = 8
-})
