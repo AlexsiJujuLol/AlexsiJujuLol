@@ -33,14 +33,6 @@ VisualRing.Radius = DetectionRange
 local ForceFieldPart
 local ForceFieldActive = false
 
--- Timer display for parry measurement
-local TimerText = Drawing.new("Text")
-TimerText.Visible = false
-TimerText.Color = Color3.fromRGB(255, 255, 255)
-TimerText.Font = Enum.Font.SourceSansBold
-TimerText.Size = 30
-TimerText.Position = Vector2.new(200, 200)
-
 local Window = OrionLib:MakeWindow({
     Name = "Orion Auto Parry Script",
     HidePremium = false,
@@ -265,19 +257,11 @@ RunService.RenderStepped:Connect(function()
 
     if Ball:GetAttribute("target") == Player.Name and not Parried and Distance <= DetectionRange and TimeToReach <= ReactionTime then
         if AutoParryEnabled and (tick() - LastParryTime) >= CooldownTime then
-            local startTime = tick()
             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
             Parried = true
             BallVisual.Color = Color3.fromRGB(0, 255, 0)
 
             LastParryTime = tick()
-
-            -- Measure time it took to parry
-            local endTime = tick()
-            local reactionDuration = endTime - startTime
-            TimerText.Text = string.format("Parry Reaction: %.2f s", reactionDuration)
-            TimerText.Position = Vector2.new(200, 50)
-            TimerText.Visible = true
         end
     end
 
