@@ -88,8 +88,8 @@ MainTab:AddToggle({
                 ForceFieldPart.Position = Character.HumanoidRootPart.Position
                 ForceFieldPart.Anchored = true
                 ForceFieldPart.CanCollide = false
-                ForceFieldPart.Transparency = 0.1  -- Slightly transparent
-                ForceFieldPart.BrickColor = BrickColor.new("White")  -- White color for bright appearance
+                ForceFieldPart.Transparency = 0.3  -- Semi-transparent for effect
+                ForceFieldPart.BrickColor = BrickColor.new("White")  -- White color
                 ForceFieldPart.Parent = workspace
             end
 
