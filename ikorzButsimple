@@ -1,3 +1,4 @@
+-- Load OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
 local AutoParryEnabled = true
@@ -33,12 +34,16 @@ VisualRing.Radius = DetectionRange
 local ForceFieldPart
 local ForceFieldActive = false
 
+-- Create Orion Window
 local Window = OrionLib:MakeWindow({
     Name = "Orion Auto Parry Script",
     HidePremium = false,
     SaveConfig = true,
     ConfigFolder = "OrionParryConfig"
 })
+
+-- Make sure Orion window is shown
+Window:Toggle()
 
 local MainTab = Window:MakeTab({
     Name = "Main",
@@ -183,6 +188,9 @@ OrionLib:MakeNotification({
     Time = 5
 })
 
+-- Continue your other logic here for parrying and visuals...
+
+-- Add Auto Parry functionality logic
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
