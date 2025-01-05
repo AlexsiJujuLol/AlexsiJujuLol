@@ -1,6 +1,7 @@
 -- Load OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
+-- Default values
 local AutoParryEnabled = true
 local VisualEnabled = true
 local ReactionTime = 0.35
@@ -8,7 +9,10 @@ local DetectionRange = 50
 local CooldownTime = 0.15
 local Parried = false
 local LastParryTime = 0
+local ForceFieldActive = false
+local ForceFieldPart
 
+-- Drawing objects
 local ParryRing = Drawing.new("Circle")
 ParryRing.Visible = false
 ParryRing.Color = Color3.fromRGB(255, 0, 0)
@@ -31,9 +35,6 @@ VisualRing.Transparency = 0.5
 VisualRing.Filled = false
 VisualRing.Radius = DetectionRange
 
-local ForceFieldPart
-local ForceFieldActive = false
-
 -- Create Orion Window
 local Window = OrionLib:MakeWindow({
     Name = "Orion Auto Parry Script",
@@ -42,15 +43,13 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "OrionParryConfig"
 })
 
--- Make sure Orion window is shown
-Window:Toggle()
-
 local MainTab = Window:MakeTab({
     Name = "Main",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
+-- Add Auto Parry Toggle
 MainTab:AddToggle({
     Name = "Enable Auto Parry",
     Default = true,
@@ -65,53 +64,37 @@ MainTab:AddToggle({
     end
 })
 
+-- Add Force Field Toggle
 MainTab:AddToggle({
-    Name = "Enable Visual Parry Ring",
-    Default = true,
-    Callback = function(value)
-        VisualEnabled = value
-        OrionLib:MakeNotification({
-            Name = "Visuals",
-            Content = value and "Enabled" or "Disabled",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-    end
-})
-
-MainTab:AddToggle({
-    Name = "Enable ForceField",
+    Name = "Enable Force Field",
     Default = false,
     Callback = function(value)
         local Character = game.Players.LocalPlayer.Character
         if value then
-            -- Create the ForceField Part (sphere)
+            -- Create ForceField Part (sphere)
             if not ForceFieldPart then
                 ForceFieldPart = Instance.new("Part")
-                ForceFieldPart.Shape = Enum.PartType.Ball  -- Make it spherical
-                ForceFieldPart.Size = Vector3.new(60, 60, 60)  -- Large size for the force field
+                ForceFieldPart.Shape = Enum.PartType.Ball
+                ForceFieldPart.Size = Vector3.new(60, 60, 60)
                 ForceFieldPart.Position = Character.HumanoidRootPart.Position
                 ForceFieldPart.Anchored = true
                 ForceFieldPart.CanCollide = false
-                ForceFieldPart.Transparency = 0.3  -- Semi-transparent for effect
+                ForceFieldPart.Transparency = 0.3  -- Semi-transparent effect
                 ForceFieldPart.BrickColor = BrickColor.new("White")  -- White color
                 ForceFieldPart.Parent = workspace
             end
-
-            -- Update the force field's position to stay centered around the player's character
+            -- Update force field position
             if ForceFieldPart then
                 ForceFieldPart.Position = Character.HumanoidRootPart.Position
                 ForceFieldPart.Visible = true
             end
-
             ForceFieldActive = true
         else
-            -- Destroy the force field part when disabled
+            -- Destroy ForceField part when toggled off
             if ForceFieldPart then
                 ForceFieldPart:Destroy()
                 ForceFieldPart = nil
             end
-
             ForceFieldActive = false
         end
     end
@@ -188,9 +171,7 @@ OrionLib:MakeNotification({
     Time = 5
 })
 
--- Continue your other logic here for parrying and visuals...
-
--- Add Auto Parry functionality logic
+-- Auto Parry logic
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -278,13 +259,12 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Code to handle force field visualization
+-- Handle Force Field visualization
 RunService.RenderStepped:Connect(function()
     local Character = Player.Character
     if Character then
         local HRP = Character:FindFirstChild("HumanoidRootPart")
         if HRP and ForceFieldPart then
-            -- Update the position of the anchored force field part to follow the player
             ForceFieldPart.Position = HRP.Position
         end
     end
