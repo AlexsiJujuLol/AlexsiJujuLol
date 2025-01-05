@@ -71,6 +71,25 @@ MainTab:AddToggle({
     end
 })
 
+MainTab:AddToggle({
+    Name = "Enable ForceField",
+    Default = false,
+    Callback = function(value)
+        local Character = game.Players.LocalPlayer.Character
+        if value then
+            local forceField = Instance.new("ForceField")
+            forceField.Parent = Character
+            -- Ensure it's visible (normally visible by default)
+            forceField.Visible = true
+        else
+            local forceField = Character:FindFirstChildOfClass("ForceField")
+            if forceField then
+                forceField:Destroy()
+            end
+        end
+    end
+})
+
 local SettingsTab = Window:MakeTab({
     Name = "Settings",
     Icon = "rbxassetid://4483345998",
@@ -169,7 +188,15 @@ local function GetClosestBall()
     return closestBall
 end
 
-RunService.RenderStepped:Connect(function()
+local function HandleClash()
+    -- Handle any possible clashes during parry
+    if Parried and (tick() - LastParryTime) < CooldownTime then
+        return false -- Parrying is on cooldown
+    end
+    return true -- Parry is available
+end
+
+RunService.Heartbeat:Connect(function()
     local Character = Player.Character
     if Character then
         local HRP = Character:FindFirstChild("HumanoidRootPart")
@@ -214,12 +241,11 @@ RunService.RenderStepped:Connect(function()
     BallVisual.Position = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
     BallVisual.Visible = OnScreen
 
-    if Ball:GetAttribute("target") == Player.Name and not Parried and Distance <= DetectionRange and TimeToReach <= ReactionTime then
-        if AutoParryEnabled and (tick() - LastParryTime) >= CooldownTime then
+    if Ball:GetAttribute("target") == Player.Name and Distance <= DetectionRange and TimeToReach <= ReactionTime then
+        if AutoParryEnabled and HandleClash() then
             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
             Parried = true
             BallVisual.Color = Color3.fromRGB(0, 255, 0)
-
             LastParryTime = tick()
         end
     end
