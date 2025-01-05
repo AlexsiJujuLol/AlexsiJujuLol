@@ -1,9 +1,87 @@
-local Ikorz = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local ikorz = loadstring(game:HttpGet("https://[Log in to view URL]"))()
+local SaveManager = loadstring(game:HttpGet("https://[Log in to view URL]"))()
+local InterfaceManager = loadstring(game:HttpGet("https://[Log in to view URL]"))()
 
-local Window = Ikorz:CreateWindow({
-    Title = "Ikorz UI",
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Player = Players.LocalPlayer
+
+local AutoParryEnabled = true
+local VisualEnabled = true
+local ReactionTime = 0.35
+local DetectionRange = 50
+local CooldownTime = 0.15
+local Parried = false
+local LastParryTime = 0
+
+local ParryRing = Drawing.new("Circle")
+ParryRing.Visible = false
+ParryRing.Color = Color3.fromRGB(255, 0, 0)
+ParryRing.Transparency = 0.5
+ParryRing.Thickness = 2
+ParryRing.Filled = false
+
+local function GetClosestBall()
+    local closestBall, closestDistance = nil, math.huge
+    for _, Ball in ipairs(workspace.Balls:GetChildren()) do
+        if Ball:GetAttribute("realBall") then
+            local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+            if HRP then
+                local Distance = (HRP.Position - Ball.Position).Magnitude
+                if Distance < closestDistance then
+                    closestDistance = Distance
+                    closestBall = Ball
+                end
+            end
+        end
+    end
+    return closestBall
+end
+
+RunService.Heartbeat:Connect(function()
+    if not AutoParryEnabled and not VisualEnabled then
+        ParryRing.Visible = false
+        return
+    end
+
+    local HRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    if not HRP then
+        ParryRing.Visible = false
+        return
+    end
+
+    local Ball = GetClosestBall()
+    if not Ball then
+        return
+    end
+
+    local BallVelocity = Ball.Velocity.Magnitude
+    local Distance = (HRP.Position - Ball.Position).Magnitude
+    local TimeToReach = Distance / BallVelocity
+
+    local ScreenPosition, OnScreen = workspace.CurrentCamera:WorldToViewportPoint(HRP.Position)
+    ParryRing.Position = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
+    ParryRing.Radius = math.min(DetectionRange, Distance)
+    ParryRing.Visible = VisualEnabled and OnScreen
+
+    local AdaptiveReactionTime = ReactionTime + math.clamp((BallVelocity / 100), 0, 0.1)
+
+    if Ball:GetAttribute("target") == Player.Name and not Parried and Distance <= DetectionRange and TimeToReach <= AdaptiveReactionTime then
+        if AutoParryEnabled and (tick() - LastParryTime) >= CooldownTime then
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            Parried = true
+            LastParryTime = tick()
+        end
+    end
+
+    if (tick() - LastParryTime) >= CooldownTime then
+        Parried = false
+    end
+end)
+
+local Window = ikorz:CreateWindow({
+    Title = "ikorz " .. ikorz.Version,
     SubTitle = "by dawid",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
@@ -17,137 +95,33 @@ local Tabs = {
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
-local AutoParryEnabled = false
-local AutoParryToggle = Tabs.Settings:AddToggle("AutoParryToggle", {
-    Title = "Enable Auto Parry",
-    Default = false
+local ToggleAutoParry = Tabs.Main:AddToggle("AutoParryToggle", {
+    Title = "Toggle Auto Parry",
+    Default = true
 })
 
-AutoParryToggle:OnChanged(function(state)
-    AutoParryEnabled = state
-    if state then
-        print("Auto Parry Enabled")
-    else
-        print("Auto Parry Disabled")
-    end
+ToggleAutoParry:OnChanged(function()
+    AutoParryEnabled = ToggleAutoParry.Value
+    print("Auto Parry:", AutoParryEnabled and "Enabled" or "Disabled")
 end)
 
-local Players = game:GetService("Players")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local RunService = game:GetService("RunService")
-local Player = Players.LocalPlayer
-
-local function get_player()
-    return Players.LocalPlayer
-end
-
-local function get_character()
-    local player = get_player()
-    return player and player.Character
-end
-
-local function get_humanoid_root_part()
-    local char = get_character()
-    return char and char:FindFirstChild("HumanoidRootPart")
-end
-
-local function get_ball()
-    local ballContainer = workspace:FindFirstChild("Balls")
-    if not ballContainer then return nil end
-
-    for _, v in pairs(ballContainer:GetChildren()) do
-        if not v.Anchored then
-            return v
-        end
-    end
-    return nil
-end
-
-local function calculate_parry_distance()
-    local ball = get_ball()
-    if ball then
-        local ping = get_player():GetNetworkPing() * 20
-        return math.clamp(ball.Velocity.Magnitude / 2.4 + ping, 15, 200)
-    end
-    return 15
-end
-
-local function create_visualizer()
-    local sphere = Instance.new("Part")
-    sphere.Shape = Enum.PartType.Ball
-    sphere.Anchored = true
-    sphere.CanCollide = false
-    sphere.CastShadow = false
-    sphere.Transparency = 1
-    sphere.Material = Enum.Material.ForceField
-    sphere.Parent = workspace
-
-    local hue = 0
-
-    local function update_visualizer()
-        if not AutoParryEnabled then
-            sphere.Transparency = 1
-            return
-        end
-
-        local humanoidRootPart = get_humanoid_root_part()
-        if not humanoidRootPart then
-            sphere.Transparency = 1
-            return
-        end
-
-        sphere.Transparency = 0.5
-        local parryDistance = calculate_parry_distance()
-        sphere.Size = Vector3.new(parryDistance * 2, parryDistance * 2, parryDistance * 2)
-        sphere.Position = humanoidRootPart.Position
-
-        hue = (hue + 0.01) % 1
-        sphere.Color = Color3.fromHSV(hue, 1, 1)
-    end
-
-    local function is_ball_within_visualizer(ball)
-        local humanoidRootPart = get_humanoid_root_part()
-        if not humanoidRootPart or not ball then
-            return false
-        end
-
-        local distance = (humanoidRootPart.Position - ball.Position).Magnitude
-        return distance <= sphere.Size.X / 2
-    end
-
-    local function parry_if_valid(ball)
-        if ball and is_ball_within_visualizer(ball) and Player.Character:FindFirstChild("Highlight") then
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-        end
-    end
-
-    RunService.RenderStepped:Connect(function()
-        if AutoParryEnabled then
-            local ball = get_ball()
-            update_visualizer()
-            parry_if_valid(ball)
-        end
-    end)
-end
-
-create_visualizer()
-
-SaveManager:SetLibrary(Ikorz)
-InterfaceManager:SetLibrary(Ikorz)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-InterfaceManager:SetFolder("IkorzScriptHub")
-SaveManager:SetFolder("IkorzScriptHub/specific-game")
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
-
-Window:SelectTab(1)
-
-Ikorz:Notify({
-    Title = "Ikorz",
-    Content = "The script has been loaded.",
-    Duration = 8
+local ToggleVisual = Tabs.Main:AddToggle("VisualToggle", {
+    Title = "Toggle Visual",
+    Default = true
 })
 
-SaveManager:LoadAutoloadConfig()
+ToggleVisual:OnChanged(function()
+    VisualEnabled = ToggleVisual.Value
+    print("Visual:", VisualEnabled and "Enabled" or "Disabled")
+end)
+
+local SaveManager = loadstring(game:HttpGet("https://[Log in to view URL]"))()
+SaveManager:SetLibrary(ikorz)
+SaveManager:IgnoreThemeSettings()
+SaveManager:BuildConfigSection(Tabs.Settings)
+
+ikorz:Notify({
+    Title = "ikorz",
+    Content = "Script Loaded Successfully!",
+    Duration = 8
+})
