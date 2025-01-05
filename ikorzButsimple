@@ -30,6 +30,17 @@ VisualRing.Transparency = 0.5
 VisualRing.Filled = false
 VisualRing.Radius = DetectionRange
 
+local ForceFieldPart
+local ForceFieldActive = false
+
+-- Timer display for parry measurement
+local TimerText = Drawing.new("Text")
+TimerText.Visible = false
+TimerText.Color = Color3.fromRGB(255, 255, 255)
+TimerText.Font = Enum.Font.SourceSansBold
+TimerText.Size = 30
+TimerText.Position = Vector2.new(200, 200)
+
 local Window = OrionLib:MakeWindow({
     Name = "Orion Auto Parry Script",
     HidePremium = false,
@@ -77,15 +88,34 @@ MainTab:AddToggle({
     Callback = function(value)
         local Character = game.Players.LocalPlayer.Character
         if value then
-            local forceField = Instance.new("ForceField")
-            forceField.Parent = Character
-            -- Ensure it's visible (normally visible by default)
-            forceField.Visible = true
-        else
-            local forceField = Character:FindFirstChildOfClass("ForceField")
-            if forceField then
-                forceField:Destroy()
+            -- Create the ForceField Part (sphere)
+            if not ForceFieldPart then
+                ForceFieldPart = Instance.new("Part")
+                ForceFieldPart.Shape = Enum.PartType.Ball  -- Make it spherical
+                ForceFieldPart.Size = Vector3.new(60, 60, 60)  -- Large size for the force field
+                ForceFieldPart.Position = Character.HumanoidRootPart.Position
+                ForceFieldPart.Anchored = true
+                ForceFieldPart.CanCollide = false
+                ForceFieldPart.Transparency = 0.1  -- Slightly transparent
+                ForceFieldPart.BrickColor = BrickColor.new("White")  -- White color for bright appearance
+                ForceFieldPart.Parent = workspace
             end
+
+            -- Update the force field's position to stay centered around the player's character
+            if ForceFieldPart then
+                ForceFieldPart.Position = Character.HumanoidRootPart.Position
+                ForceFieldPart.Visible = true
+            end
+
+            ForceFieldActive = true
+        else
+            -- Destroy the force field part when disabled
+            if ForceFieldPart then
+                ForceFieldPart:Destroy()
+                ForceFieldPart = nil
+            end
+
+            ForceFieldActive = false
         end
     end
 })
@@ -188,15 +218,7 @@ local function GetClosestBall()
     return closestBall
 end
 
-local function HandleClash()
-    -- Handle any possible clashes during parry
-    if Parried and (tick() - LastParryTime) < CooldownTime then
-        return false -- Parrying is on cooldown
-    end
-    return true -- Parry is available
-end
-
-RunService.Heartbeat:Connect(function()
+RunService.RenderStepped:Connect(function()
     local Character = Player.Character
     if Character then
         local HRP = Character:FindFirstChild("HumanoidRootPart")
@@ -241,16 +263,37 @@ RunService.Heartbeat:Connect(function()
     BallVisual.Position = Vector2.new(ScreenPosition.X, ScreenPosition.Y)
     BallVisual.Visible = OnScreen
 
-    if Ball:GetAttribute("target") == Player.Name and Distance <= DetectionRange and TimeToReach <= ReactionTime then
-        if AutoParryEnabled and HandleClash() then
+    if Ball:GetAttribute("target") == Player.Name and not Parried and Distance <= DetectionRange and TimeToReach <= ReactionTime then
+        if AutoParryEnabled and (tick() - LastParryTime) >= CooldownTime then
+            local startTime = tick()
             VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
             Parried = true
             BallVisual.Color = Color3.fromRGB(0, 255, 0)
+
             LastParryTime = tick()
+
+            -- Measure time it took to parry
+            local endTime = tick()
+            local reactionDuration = endTime - startTime
+            TimerText.Text = string.format("Parry Reaction: %.2f s", reactionDuration)
+            TimerText.Position = Vector2.new(200, 50)
+            TimerText.Visible = true
         end
     end
 
     if (tick() - LastParryTime) >= CooldownTime then
         Parried = false
+    end
+end)
+
+-- Code to handle force field visualization
+RunService.RenderStepped:Connect(function()
+    local Character = Player.Character
+    if Character then
+        local HRP = Character:FindFirstChild("HumanoidRootPart")
+        if HRP and ForceFieldPart then
+            -- Update the position of the anchored force field part to follow the player
+            ForceFieldPart.Position = HRP.Position
+        end
     end
 end)
