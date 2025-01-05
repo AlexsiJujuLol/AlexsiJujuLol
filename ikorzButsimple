@@ -43,13 +43,14 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "OrionParryConfig"
 })
 
+-- Main Tab with Auto Parry Toggle
 local MainTab = Window:MakeTab({
     Name = "Main",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- Add Auto Parry Toggle
+-- Add Auto Parry Toggle in Main Tab
 MainTab:AddToggle({
     Name = "Enable Auto Parry",
     Default = true,
@@ -100,6 +101,7 @@ MainTab:AddToggle({
     end
 })
 
+-- Settings Tab for adjustable values
 local SettingsTab = Window:MakeTab({
     Name = "Settings",
     Icon = "rbxassetid://4483345998",
