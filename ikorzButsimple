@@ -1,81 +1,221 @@
-local library = {}
+local G2L = {}
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "Ikorz"
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- StarterGui.KeySystem
+G2L["KeySystem"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
+G2L["KeySystem"]["Name"] = "KeySystem"
+G2L["KeySystem"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 400, 0, 300)
-mainFrame.Position = UDim2.new(0, 50, 0, 50)
-mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-mainFrame.BackgroundTransparency = 0.5
-mainFrame.BorderSizePixel = 0
-mainFrame.Visible = true
-mainFrame.Parent = screenGui
+-- StarterGui.KeySystem.MainFrame
+G2L["MainFrame"] = Instance.new("Frame", G2L["KeySystem"])
+G2L["MainFrame"]["Name"] = "MainFrame"
+G2L["MainFrame"]["BackgroundColor3"] = Color3.fromRGB(32, 26, 45)
+G2L["MainFrame"]["Size"] = UDim2.new(0, 400, 0, 250)
+G2L["MainFrame"]["Position"] = UDim2.new(0.5, -200, 0.5, -125)
 
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(0, 400, 0, 50)
-titleLabel.Position = UDim2.new(0, 0, 0, -50)
-titleLabel.Text = "Ikorz"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 30
+-- UICorner for MainFrame
+local mainFrameCorner = Instance.new("UICorner", G2L["MainFrame"])
+mainFrameCorner.CornerRadius = UDim.new(0, 15)
+
+-- Title Label
+local titleLabel = Instance.new("TextLabel", G2L["MainFrame"])
+titleLabel.Text = "Enter Key"
 titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 24
+titleLabel.TextColor3 = Color3.fromRGB(228, 228, 228)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Parent = mainFrame
+titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+titleLabel.Position = UDim2.new(0, 0, 0, 10)
 
--- Create floating dots in the middle of the UI
-local function createFloatingDots()
-    for i = 1, 10 do
-        local dot = Instance.new("Frame")
-        dot.Size = UDim2.new(0, 20, 0, 20)
-        dot.Position = UDim2.new(math.random() * 0.8 + 0.1, 0, math.random() * 0.8 + 0.1, 0)
-        dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        dot.BackgroundTransparency = 0.7
-        dot.BorderSizePixel = 0
-        dot.AnchorPoint = Vector2.new(0.5, 0.5)
-        dot.Parent = mainFrame
+-- Key Input TextBox
+local keyInput = Instance.new("TextBox", G2L["MainFrame"])
+keyInput.PlaceholderText = "Enter the key..."
+keyInput.Font = Enum.Font.Gotham
+keyInput.TextSize = 18
+keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyInput.BackgroundColor3 = Color3.fromRGB(19, 16, 25)
+keyInput.Size = UDim2.new(0.8, 0, 0.2, 0)
+keyInput.Position = UDim2.new(0.1, 0, 0.4, 0)
 
-        -- Animate the dots with a smooth movement effect
-        game:GetService("RunService").Heartbeat:Connect(function()
-            local offsetX = math.sin(tick() * (i + 1)) * 0.05
-            local offsetY = math.cos(tick() * (i + 1)) * 0.05
-            dot.Position = UDim2.new(dot.Position.X.Scale + offsetX, 0, dot.Position.Y.Scale + offsetY, 0)
-        end)
-    end
-end
+-- UICorner for Key Input
+local keyInputCorner = Instance.new("UICorner", keyInput)
+keyInputCorner.CornerRadius = UDim.new(0, 10)
 
-createFloatingDots()
+-- Submit Button
+local submitButton = Instance.new("TextButton", G2L["MainFrame"])
+submitButton.Text = "Submit"
+submitButton.Font = Enum.Font.GothamBold
+submitButton.TextSize = 18
+submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+submitButton.BackgroundColor3 = Color3.fromRGB(54, 51, 75)
+submitButton.Size = UDim2.new(0.6, 0, 0.2, 0)
+submitButton.Position = UDim2.new(0.2, 0, 0.7, 0)
 
-local cubeButton = Instance.new("TextButton")
-cubeButton.Size = UDim2.new(0, 40, 0, 40)
-cubeButton.Position = UDim2.new(0, 10, 0, 10)
-cubeButton.Text = "≡"
-cubeButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-cubeButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-cubeButton.Font = Enum.Font.GothamBold
-cubeButton.Parent = screenGui
+-- UICorner for Submit Button
+local submitButtonCorner = Instance.new("UICorner", submitButton)
+submitButtonCorner.CornerRadius = UDim.new(0, 10)
 
-cubeButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
+-- Blur Effect
+local blur = Instance.new("BlurEffect", game:GetService("Lighting"))
+blur.Size = 10
+
+-- Main UI (Hidden by default)
+G2L["MainUI"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
+G2L["MainUI"]["Name"] = "Ikorz"
+G2L["MainUI"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
+G2L["MainUI"].Enabled = false
+
+-- Main UI Frame
+G2L["MainFrameUI"] = Instance.new("Frame", G2L["MainUI"])
+G2L["MainFrameUI"]["BackgroundColor3"] = Color3.fromRGB(32, 26, 45)
+G2L["MainFrameUI"]["Size"] = UDim2.new(0, 454, 0, 333)
+G2L["MainFrameUI"]["Position"] = UDim2.new(0.5, -227, 0.5, -166)
+
+-- UICorner for Main UI Frame
+local mainUIFrameCorner = Instance.new("UICorner", G2L["MainFrameUI"])
+mainUIFrameCorner.CornerRadius = UDim.new(0, 15)
+
+-- Title for Main UI
+local mainUITitle = Instance.new("TextLabel", G2L["MainFrameUI"])
+mainUITitle.Text = "Ikorz"
+mainUITitle.Font = Enum.Font.GothamBold
+mainUITitle.TextSize = 24
+mainUITitle.TextColor3 = Color3.fromRGB(228, 228, 228)
+mainUITitle.BackgroundTransparency = 1
+mainUITitle.Size = UDim2.new(1, 0, 0.2, 0)
+mainUITitle.Position = UDim2.new(0, 0, 0, 10)
+
+-- Add a simple floating dot effect
+local dotEffect = Instance.new("Frame", G2L["MainFrameUI"])
+dotEffect.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+dotEffect.Size = UDim2.new(0, 10, 0, 10)
+dotEffect.Position = UDim2.new(0.5, -5, 0.5, -5)
+dotEffect.BackgroundTransparency = 0.8
+
+local dotUICorner = Instance.new("UICorner", dotEffect)
+dotUICorner.CornerRadius = UDim.new(1, 0)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    local offset = math.sin(tick()) * 20
+    dotEffect.Position = UDim2.new(0.5, -5, 0.5 + offset / 100, -5)
 end)
 
-local dragStart, startPos
-local function update(input)
-    local delta = input.Position - dragStart
-    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+-- Draggable Logic
+local function makeDraggable(frame, dragHandle)
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    dragHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
 end
 
-mainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragStart = input.Position
-        startPos = mainFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                game:GetService("UserInputService").InputChanged:Disconnect(update)
+-- Make UIs Draggable
+makeDraggable(G2L["MainFrame"], G2L["MainFrame"])
+makeDraggable(G2L["MainFrameUI"], G2L["MainFrameUI"])
+
+-- Key Submission Logic
+local correctKey = "Ikorz"
+
+submitButton.MouseButton1Click:Connect(function()
+    if keyInput.Text == correctKey then
+        -- Correct Key
+        blur:Destroy() -- Remove blur effect
+        G2L["MainUI"].Enabled = true
+        G2L["KeySystem"]:Destroy() -- Remove the key system UI
+    else
+        -- Wrong Key: Flash Red
+        keyInput.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        task.wait(0.2)
+        keyInput.BackgroundColor3 = Color3.fromRGB(19, 16, 25)
+    end
+end)
+
+-- Add Toggle UI for Aimbot
+local aimbotToggle = Instance.new("TextButton", G2L["MainFrameUI"])
+aimbotToggle.Text = "Toggle Aimbot"
+aimbotToggle.Font = Enum.Font.GothamBold
+aimbotToggle.TextSize = 18
+aimbotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+aimbotToggle.BackgroundColor3 = Color3.fromRGB(54, 51, 75)
+aimbotToggle.Size = UDim2.new(0.6, 0, 0.2, 0)
+aimbotToggle.Position = UDim2.new(0.2, 0, 0.4, 0)
+
+-- UICorner for Aimbot Toggle Button
+local aimbotButtonCorner = Instance.new("UICorner", aimbotToggle)
+aimbotButtonCorner.CornerRadius = UDim.new(0, 10)
+
+local AutoAimEnabled = false
+
+-- Toggle Button Click Event
+aimbotToggle.MouseButton1Click:Connect(function()
+    AutoAimEnabled = not AutoAimEnabled
+    aimbotToggle.Text = AutoAimEnabled and "Aimbot: ON" or "Aimbot: OFF"
+end)
+
+-- Aimbot Functionality with Smoothing
+local function aimAtClosestPlayer()
+    if AutoAimEnabled then
+        local closestPlayer = nil
+        local closestDistance = math.huge
+
+        -- Find the closest player with a head
+        for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+            if player.Character and player.Character:FindFirstChild("Head") then
+                local headPosition = player.Character.Head.Position
+                local myPosition = game:GetService("Players").LocalPlayer.Character.Head.Position
+                local distance = (headPosition - myPosition).Magnitude
+
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestPlayer = player
+                end
             end
-        end)
-        game:GetService("UserInputService").InputChanged:Connect(update)
-    end
-end)
+        end
 
-return library
+        -- Aim at the closest player's head if found
+        if closestPlayer then
+            local character = closestPlayer.Character
+            local head = character and character:FindFirstChild("Head")
+            if head then
+                local direction = (head.Position - game:GetService("Players").LocalPlayer.Character.Head.Position).unit
+                local targetCFrame = CFrame.lookAt(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position, head.Position)
+
+                -- Smoothly interpolate the CFrame
+                game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame:Lerp(targetCFrame, 0.1)
+            end
+        end
+    end
+end
+
+-- Run the aimbot function every frame
+game:GetService("RunService").RenderStepped:Connect(function()
+    aimAtClosestPlayer()
+end)
