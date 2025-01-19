@@ -1,221 +1,251 @@
-local G2L = {}
+local UI_Lib = {}
 
--- StarterGui.KeySystem
-G2L["KeySystem"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
-G2L["KeySystem"]["Name"] = "KeySystem"
-G2L["KeySystem"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
+UI_Lib["ScreenGui"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
+UI_Lib["ScreenGui"].Name = "Ikorz_UI"
+UI_Lib["ScreenGui"].ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+UI_Lib["ScreenGui"].ResetOnSpawn = false
 
--- StarterGui.KeySystem.MainFrame
-G2L["MainFrame"] = Instance.new("Frame", G2L["KeySystem"])
-G2L["MainFrame"]["Name"] = "MainFrame"
-G2L["MainFrame"]["BackgroundColor3"] = Color3.fromRGB(32, 26, 45)
-G2L["MainFrame"]["Size"] = UDim2.new(0, 400, 0, 250)
-G2L["MainFrame"]["Position"] = UDim2.new(0.5, -200, 0.5, -125)
+local correctKey = "Ikorz"
+local keyEntered = false
 
--- UICorner for MainFrame
-local mainFrameCorner = Instance.new("UICorner", G2L["MainFrame"])
-mainFrameCorner.CornerRadius = UDim.new(0, 15)
+-- UI Frame Setup
+local keyFrame = Instance.new("Frame", UI_Lib["ScreenGui"])
+keyFrame.Size = UDim2.new(0, 300, 0, 150)
+keyFrame.Position = UDim2.new(0.5, -150, 0.5, -75)
+keyFrame.BackgroundColor3 = Color3.fromRGB(30, 28, 40)
+keyFrame.BackgroundTransparency = 0.3 -- Transparency Adjusted
+keyFrame.Name = "KeyFrame"
+local keyFrameCorner = Instance.new("UICorner", keyFrame)
+keyFrameCorner.CornerRadius = UDim.new(0, 20)
 
--- Title Label
-local titleLabel = Instance.new("TextLabel", G2L["MainFrame"])
-titleLabel.Text = "Enter Key"
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 24
-titleLabel.TextColor3 = Color3.fromRGB(228, 228, 228)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-titleLabel.Position = UDim2.new(0, 0, 0, 10)
+local keyTitle = Instance.new("TextLabel", keyFrame)
+keyTitle.Text = "Enter Key"
+keyTitle.Font = Enum.Font.GothamBold
+keyTitle.TextSize = 20
+keyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyTitle.BackgroundTransparency = 1
+keyTitle.Size = UDim2.new(1, 0, 0, 30)
+keyTitle.Position = UDim2.new(0, 0, 0, 10)
 
--- Key Input TextBox
-local keyInput = Instance.new("TextBox", G2L["MainFrame"])
-keyInput.PlaceholderText = "Enter the key..."
+local keyInput = Instance.new("TextBox", keyFrame)
+keyInput.Size = UDim2.new(0, 260, 0, 40)
+keyInput.Position = UDim2.new(0.5, -130, 0, 50)
+keyInput.PlaceholderText = "Enter Key Here"
 keyInput.Font = Enum.Font.Gotham
 keyInput.TextSize = 18
 keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-keyInput.BackgroundColor3 = Color3.fromRGB(19, 16, 25)
-keyInput.Size = UDim2.new(0.8, 0, 0.2, 0)
-keyInput.Position = UDim2.new(0.1, 0, 0.4, 0)
-
--- UICorner for Key Input
+keyInput.BackgroundColor3 = Color3.fromRGB(40, 38, 50)
 local keyInputCorner = Instance.new("UICorner", keyInput)
 keyInputCorner.CornerRadius = UDim.new(0, 10)
 
--- Submit Button
-local submitButton = Instance.new("TextButton", G2L["MainFrame"])
+local submitButton = Instance.new("TextButton", keyFrame)
 submitButton.Text = "Submit"
-submitButton.Font = Enum.Font.GothamBold
+submitButton.Size = UDim2.new(0, 100, 0, 40)
+submitButton.Position = UDim2.new(0.5, -50, 0, 100)
+submitButton.Font = Enum.Font.Gotham
 submitButton.TextSize = 18
 submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-submitButton.BackgroundColor3 = Color3.fromRGB(54, 51, 75)
-submitButton.Size = UDim2.new(0.6, 0, 0.2, 0)
-submitButton.Position = UDim2.new(0.2, 0, 0.7, 0)
-
--- UICorner for Submit Button
+submitButton.BackgroundColor3 = Color3.fromRGB(30, 28, 40)
 local submitButtonCorner = Instance.new("UICorner", submitButton)
 submitButtonCorner.CornerRadius = UDim.new(0, 10)
 
--- Blur Effect
-local blur = Instance.new("BlurEffect", game:GetService("Lighting"))
-blur.Size = 10
-
--- Main UI (Hidden by default)
-G2L["MainUI"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"))
-G2L["MainUI"]["Name"] = "Ikorz"
-G2L["MainUI"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
-G2L["MainUI"].Enabled = false
-
--- Main UI Frame
-G2L["MainFrameUI"] = Instance.new("Frame", G2L["MainUI"])
-G2L["MainFrameUI"]["BackgroundColor3"] = Color3.fromRGB(32, 26, 45)
-G2L["MainFrameUI"]["Size"] = UDim2.new(0, 454, 0, 333)
-G2L["MainFrameUI"]["Position"] = UDim2.new(0.5, -227, 0.5, -166)
-
--- UICorner for Main UI Frame
-local mainUIFrameCorner = Instance.new("UICorner", G2L["MainFrameUI"])
-mainUIFrameCorner.CornerRadius = UDim.new(0, 15)
-
--- Title for Main UI
-local mainUITitle = Instance.new("TextLabel", G2L["MainFrameUI"])
-mainUITitle.Text = "Ikorz"
-mainUITitle.Font = Enum.Font.GothamBold
-mainUITitle.TextSize = 24
-mainUITitle.TextColor3 = Color3.fromRGB(228, 228, 228)
-mainUITitle.BackgroundTransparency = 1
-mainUITitle.Size = UDim2.new(1, 0, 0.2, 0)
-mainUITitle.Position = UDim2.new(0, 0, 0, 10)
-
--- Add a simple floating dot effect
-local dotEffect = Instance.new("Frame", G2L["MainFrameUI"])
-dotEffect.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-dotEffect.Size = UDim2.new(0, 10, 0, 10)
-dotEffect.Position = UDim2.new(0.5, -5, 0.5, -5)
-dotEffect.BackgroundTransparency = 0.8
-
-local dotUICorner = Instance.new("UICorner", dotEffect)
-dotUICorner.CornerRadius = UDim.new(1, 0)
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    local offset = math.sin(tick()) * 20
-    dotEffect.Position = UDim2.new(0.5, -5, 0.5 + offset / 100, -5)
-end)
-
--- Draggable Logic
-local function makeDraggable(frame, dragHandle)
-    local dragging = false
-    local dragInput, dragStart, startPos
-
-    dragHandle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    dragHandle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
--- Make UIs Draggable
-makeDraggable(G2L["MainFrame"], G2L["MainFrame"])
-makeDraggable(G2L["MainFrameUI"], G2L["MainFrameUI"])
-
--- Key Submission Logic
-local correctKey = "Ikorz"
-
 submitButton.MouseButton1Click:Connect(function()
     if keyInput.Text == correctKey then
-        -- Correct Key
-        blur:Destroy() -- Remove blur effect
-        G2L["MainUI"].Enabled = true
-        G2L["KeySystem"]:Destroy() -- Remove the key system UI
+        keyEntered = true
+        keyFrame:Destroy()
+        UI_Lib["MainFrame"].Visible = true
     else
-        -- Wrong Key: Flash Red
-        keyInput.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-        task.wait(0.2)
-        keyInput.BackgroundColor3 = Color3.fromRGB(19, 16, 25)
+        keyInput.Text = ""
+        keyInput.PlaceholderText = "Invalid Key!"
     end
 end)
 
--- Add Toggle UI for Aimbot
-local aimbotToggle = Instance.new("TextButton", G2L["MainFrameUI"])
-aimbotToggle.Text = "Toggle Aimbot"
-aimbotToggle.Font = Enum.Font.GothamBold
-aimbotToggle.TextSize = 18
-aimbotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-aimbotToggle.BackgroundColor3 = Color3.fromRGB(54, 51, 75)
-aimbotToggle.Size = UDim2.new(0.6, 0, 0.2, 0)
-aimbotToggle.Position = UDim2.new(0.2, 0, 0.4, 0)
+-- Main UI Frame
+UI_Lib["MainFrame"] = Instance.new("Frame", UI_Lib["ScreenGui"])
+UI_Lib["MainFrame"].Size = UDim2.new(0, 400, 0, 400)
+UI_Lib["MainFrame"].Position = UDim2.new(0.5, -200, 0.5, -200)
+UI_Lib["MainFrame"].BackgroundColor3 = Color3.fromRGB(30, 28, 40)
+UI_Lib["MainFrame"].Visible = false
+UI_Lib["MainFrame"].BackgroundTransparency = 0.4 -- Transparency Adjusted
+local mainFrameCorner = Instance.new("UICorner", UI_Lib["MainFrame"])
+mainFrameCorner.CornerRadius = UDim.new(0, 20)
 
--- UICorner for Aimbot Toggle Button
-local aimbotButtonCorner = Instance.new("UICorner", aimbotToggle)
-aimbotButtonCorner.CornerRadius = UDim.new(0, 10)
+local titleLabel = Instance.new("TextLabel", UI_Lib["MainFrame"])
+titleLabel.Text = "Ikorz UI"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 26
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.Position = UDim2.new(0, 0, 0, 10)
 
-local AutoAimEnabled = false
+-- ESP Box Toggle
+local espToggle = Instance.new("TextButton", UI_Lib["MainFrame"])
+espToggle.Text = "ESP Box: OFF"
+espToggle.Size = UDim2.new(0, 200, 0, 40)
+espToggle.Position = UDim2.new(0.5, -100, 0, 60)
+espToggle.Font = Enum.Font.Gotham
+espToggle.TextSize = 18
+espToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+espToggle.BackgroundColor3 = Color3.fromRGB(30, 28, 40)
+local espToggleCorner = Instance.new("UICorner", espToggle)
+espToggleCorner.CornerRadius = UDim.new(0, 10)
 
--- Toggle Button Click Event
-aimbotToggle.MouseButton1Click:Connect(function()
-    AutoAimEnabled = not AutoAimEnabled
-    aimbotToggle.Text = AutoAimEnabled and "Aimbot: ON" or "Aimbot: OFF"
+local espEnabled = false
+
+espToggle.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    espToggle.Text = espEnabled and "ESP Box: ON" or "ESP Box: OFF"
+    if espEnabled then
+        for _, plr in pairs(game:GetService("Players"):GetPlayers()) do
+            if plr ~= game:GetService("Players").LocalPlayer and plr.Team ~= game:GetService("Players").LocalPlayer.Team then
+                local char = plr.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    local espBox = Instance.new("BoxHandleAdornment")
+                    espBox.Adornee = char:FindFirstChild("HumanoidRootPart")
+                    espBox.AlwaysOnTop = true
+                    espBox.ZIndex = 5
+                    espBox.Size = Vector3.new(4, 6, 4)
+                    espBox.Transparency = 0.5
+                    espBox.Color3 = Color3.fromRGB(255, 0, 0)
+                    espBox.Parent = char
+                    plr.CharacterAdded:Connect(function()
+                        espBox:Destroy()
+                    end)
+                end
+            end
+        end
+    else
+        for _, plr in pairs(game:GetService("Players"):GetPlayers()) do
+            if plr ~= game:GetService("Players").LocalPlayer then
+                for _, child in pairs(plr.Character:GetChildren()) do
+                    if child:IsA("BoxHandleAdornment") then
+                        child:Destroy()
+                    end
+                end
+            end
+        end
+    end
 end)
 
--- Aimbot Functionality with Smoothing
-local function aimAtClosestPlayer()
-    if AutoAimEnabled then
-        local closestPlayer = nil
+-- Aimbot Toggle
+local aimbotToggle = Instance.new("TextButton", UI_Lib["MainFrame"])
+aimbotToggle.Text = "Aimbot: OFF"
+aimbotToggle.Size = UDim2.new(0, 200, 0, 40)
+aimbotToggle.Position = UDim2.new(0.5, -100, 0, 120)
+aimbotToggle.Font = Enum.Font.Gotham
+aimbotToggle.TextSize = 18
+aimbotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+aimbotToggle.BackgroundColor3 = Color3.fromRGB(30, 28, 40)
+local aimbotToggleCorner = Instance.new("UICorner", aimbotToggle)
+aimbotToggleCorner.CornerRadius = UDim.new(0, 10)
+
+local aimbotEnabled = false
+
+aimbotToggle.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    aimbotToggle.Text = aimbotEnabled and "Aimbot: ON" or "Aimbot: OFF"
+end)
+
+-- Noclip Toggle
+local noclipToggle = Instance.new("TextButton", UI_Lib["MainFrame"])
+noclipToggle.Text = "Noclip: OFF"
+noclipToggle.Size = UDim2.new(0, 200, 0, 40)
+noclipToggle.Position = UDim2.new(0.5, -100, 0, 180)
+noclipToggle.Font = Enum.Font.Gotham
+noclipToggle.TextSize = 18
+noclipToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipToggle.BackgroundColor3 = Color3.fromRGB(30, 28, 40)
+local noclipToggleCorner = Instance.new("UICorner", noclipToggle)
+noclipToggleCorner.CornerRadius = UDim.new(0, 10)
+
+local noclipEnabled = false
+
+noclipToggle.MouseButton1Click:Connect(function()
+    noclipEnabled = not noclipEnabled
+    noclipToggle.Text = noclipEnabled and "Noclip: ON" or "Noclip: OFF"
+end)
+
+-- Aimbot Logic (Targeting only enemies)
+game:GetService("RunService").RenderStepped:Connect(function()
+    if aimbotEnabled then
+        local player = game.Players.LocalPlayer
+        local closestEnemy = nil
         local closestDistance = math.huge
 
-        -- Find the closest player with a head
-        for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("Head") then
-                local headPosition = player.Character.Head.Position
-                local myPosition = game:GetService("Players").LocalPlayer.Character.Head.Position
-                local distance = (headPosition - myPosition).Magnitude
-
+        for _, plr in pairs(game.Players:GetPlayers()) do
+            if plr ~= player and plr.Team ~= player.Team and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
+                local distance = (plr.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
                 if distance < closestDistance then
                     closestDistance = distance
-                    closestPlayer = player
+                    closestEnemy = plr
                 end
             end
         end
 
-        -- Aim at the closest player's head if found
-        if closestPlayer then
-            local character = closestPlayer.Character
-            local head = character and character:FindFirstChild("Head")
-            if head then
-                local direction = (head.Position - game:GetService("Players").LocalPlayer.Character.Head.Position).unit
-                local targetCFrame = CFrame.lookAt(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position, head.Position)
+        if closestEnemy and closestEnemy.Character and closestEnemy.Character:FindFirstChild("HumanoidRootPart") then
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, closestEnemy.Character.HumanoidRootPart.Position)
+        end
+    end
+end)
 
-                -- Smoothly interpolate the CFrame
-                game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame:Lerp(targetCFrame, 0.1)
+-- Noclip Logic (Fixed)
+game:GetService("RunService").Heartbeat:Connect(function()
+    local character = game.Players.LocalPlayer.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local humanoid = character.Humanoid
+        -- Disable collision for noclip
+        if noclipEnabled then
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics)
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false  -- Disable collision for all parts
+                end
+            end
+        else
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics)
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true  -- Re-enable collision for all parts
+                end
             end
         end
     end
+end)
+
+-- Dragging UI
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    UI_Lib["MainFrame"].Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
 end
 
--- Run the aimbot function every frame
-game:GetService("RunService").RenderStepped:Connect(function()
-    aimAtClosestPlayer()
+UI_Lib["MainFrame"].InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = UI_Lib["MainFrame"].Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UI_Lib["MainFrame"].InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
 end)
